@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load thumbnail %}
+
+{% block title %}{{ block.super }}Nuevo producto{% endblock %}
+
+{% block container %}
+<body background= "{% static 'image/noimage.png' %}"  ></body>
+
+<div class="container-fluid">
+	<div class="row row-centered">
+	<div class="col-md-4 col-md-offset-4">
+        <br><br>
+        <h2>Añadir nuevo producto</h2>
+
+        <form enctype="multipart/form-data" method="post">
+			{% crispy form %}
+			{{ csrf_token }}
+		</form>
+
+    </div>
+    </div>
+</div>
+    {% endblock %}
+
+
+{% block scripts %}
+<script src="{% static 'site/js/dropzone.js' %}"> </script>
+
+</script>
+
+
+
+{% endblock scripts %}

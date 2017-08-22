@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+ 
+{% static %}
+ 
+{% block style_css_js %}
+//Acá pueden ir los archivos css o js que necesitemos
+{% endblock %}
+ 
+{% block contenido_post %}
+     
+    <h4>Posts</h4>
+ 
+    <div id="data-template" class="endless_page_template">
+        {% include "app/archivo.html" %}
+    </div>
+ 
+    {% block js %}
+        <script src="{% static 'jquery/endless/endless-pagination.js' %}"></script>
+        <script>$.endlessPaginate({paginateOnScroll: true});</script>
+    {% endblock %}
+ 
+{% endblock %}

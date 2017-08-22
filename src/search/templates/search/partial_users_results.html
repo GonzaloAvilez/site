@@ -1,0 +1,15 @@
+{% load i18n %}
+
+<h2>{% trans 'profiles' %}</h2>
+{% if results %}
+  <ul class="users-results">
+    {% for profile in results %}
+      <li username="{{ user.name }}">         
+            {{ user.email }}  
+            {{ profile.email }}              
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <h4 class="no-result">{% trans 'No user found' %} :(</h4>
+{% endif %}

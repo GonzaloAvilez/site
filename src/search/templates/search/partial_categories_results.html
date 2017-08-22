@@ -1,0 +1,23 @@
+{% load i18n %}
+
+<h2 class="text-center">{% trans 'categories' %}</h2>
+{% block container %}
+{% if results %}
+  <ul class="feed-results">
+    {% for category in results %}
+      
+    
+       
+          
+        <li {% if category.slug %}{% endif %}><a href="{{ category.get_absolute_url }}"     >
+        {{ category.name }}
+        </a>
+        </li>    
+        
+     
+    {% endfor %}
+  </ul>
+{% else %}
+  <h4 class="no-result">{% trans 'Category not found' %} :(</h4>
+{% endif %}
+{% endblock container %}

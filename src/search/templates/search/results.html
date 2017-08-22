@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+
+{% block title %}{% trans 'Search' %}{% endblock %}
+
+{% block head %}
+  <link href="{% static 'css/search.css' %}" rel="stylesheet">
+  <script src="{% static 'js/search.js' %}"></script>
+{% endblock head %}
+
+{% block container %}
+  <div class="page-header" style="margin-top: 60px;">
+    <div class="container-fluid">
+      <div class="col-md-3">
+        <h1></h1>
+      </div>
+      <div class="col-md-9">
+        <form role="search" action="{% url 'search' %}">
+          <input type="hidden" name="type" value="{{ active }}">
+          <div class="input-group">
+            <input type="text" class="form-control" name="q" placeholder= value="{{ querystring }}">
+            <span class="input-group-btn">
+              <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-search"></span></button>
+            </span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="row results">
+    <div class="col-md-3 col-sm-offset-1">
+      {% include 'search/partial_results_menu.html' with active=active count=count querystring=querystring %}
+    </div>
+    <div class="col-md-8">
+      {% if active == 'products' %}
+        {% include 'search/partial_products_results.html' with results=results %}
+      {% elif active == 'products' %}
+        {% include 'search/partial_products_results.html' with results=results %}
+      {% elif active == 'categories' %}
+        {% include 'search/partial_categories_results.html' with results=results %}
+      {% elif active == 'profiles' %}
+        {% include 'search/partial_profiles_results.html' with results=results %}
+      {% endif %}
+    </div>
+  </div>
+{% endblock container %}

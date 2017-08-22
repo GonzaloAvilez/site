@@ -1,0 +1,33 @@
+{% load staticfiles %}
+{% load i18n %}
+
+<!-- <ul class="nav nav-pills" role="tablist">
+  <li role="presentation"><a href="{% url 'search' %}?q={{ querystring }}&type=feed" class="list-group-item{% if active == 'products' %} active{% endif %}">
+    <span>{% trans 'Products' %}</span>
+    <span class="badge">{{ count.products }}</span>
+  </a></li>
+  <li role="presentation"><a href="{% url 'search' %}?q={{ querystring }}&type=categories" class="list-group-item{% if active == 'categories' %} active{% endif %}">
+    <span>{% trans 'Categories' %}</span>
+    <span class="badge">{{ count.categories }}</span>
+  </a></li>
+  <li role="presentation"><a href="{% url 'search' %}?q={{ querystring }}&type=profiles" class="list-group-item{% if active == 'profiles' %} active{% endif %}">
+    <span>{% trans 'Profiles' %}</span>
+    <span class="badge">{{ count.profiles }}</span>
+  </a></li>
+</ul> -->
+
+<div class="list-group">
+  <a href="{% url 'search' %}?q={{ querystring }}&type=feed" class="list-group-item{% if active == 'products' %} active{% endif %}">
+    <span>{% trans 'Products' %}</span>
+    <span class="badge">{{ count.products }}</span>
+  </a>
+  <a href="{% url 'search' %}?q={{ querystring }}&type=categories" class="list-group-item{% if active == 'categories' %} active{% endif %}">
+    <span>{% trans 'Categories' %}</span>
+    <span class="badge">{{ count.categories }}</span>
+  </a>
+ 
+  <a href="{% url 'search' %}?q={{ querystring }}&type=profiles" class="list-group-item{% if active == 'profiles' %} active{% endif %}">
+    <span>{% trans 'Profiles' %}</span>
+    <span class="badge">{{ count.profiles }}</span>
+  </a>
+</div>

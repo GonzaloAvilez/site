@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load thumbnail %}
+{% load embed_video_tags %}
+
+{% block title %}{{ block.super }}{{ show_user.profile.get_short_name }}{% endblock %}
+
+{% block container %}
+<div id="fb-root"></div>
+
+
+<!--======== Text over fullscreen carousel ===================-->
+<div class="overlay">
+  <div class=" col-md-12 text-center">
+    <!--<h1><font color="white">Qué es lo que trabajas?</font></h1>-->
+    <!--<h3>descripcion</h3>-->
+      {% if editable %}
+          <div class="col-md-12">
+            <a href="{% url 'profiles:edit_self' %}" class="btn btn-default">Editar Perfil</a>
+          </div>
+      {% endif %}
+  </div><!-- /col-md-12 text-center -->
+    <div class="container-fluid">
+      <div  class="col-xs-6 col-md-2">
+        <div id="container-fluid">
+        <h1 style="font-family:Lobster;" ><font color="white">{{ show_user.profile.get_short_name }}</font></h1>
+        <img title="profile picture" class="img-circle img-responsive img-thumbnail" src="{% thumbnail show_user.profile.picture|default:'default_profile.png' 150x150 crop %}">
+        </div>
+      </div>
+    </div>
+</div>  <!-- /overlay -->
+
+<!--======== fullscreen carousel =========-->
+<div id="carousel">
+    <div id="myCarousel" class="carousel fade-carousel slide"  data-ride="carousel" data-interval="5000" data-pause="click">
+      <ol class="carousel-indicators">
+      {% if  show_user.profile.background_1%}
+          <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+      {% else %}
+          <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+      {% endif %}
+      {% if  show_user.profile.background_2%}
+          <li data-target="#myCarousel" data-slide-to="1"></li>
+      {% endif %}
+      {% if  show_user.profile.background_3%}
+          <li data-target="#myCarousel" data-slide-to="2"></li>
+      {% endif %}
+      </ol>
+    <div class="carousel-inner">
+    {% if  show_user.profile.background_1%}
+        <div class="item slides active">
+          <div class="slide-1" style="background-image: url({{ MEDIA_URL }}{{show_user.profile.background_1}});">
+          </div>
+        </div>
+    {% else %}
+        <div class="item slides active">
+          <div class="slide-1" style="background-image: url({{ MEDIA_URL }}{{"profile_background/wood.jpg"}});">
+          </div>
+        </div>
+    {% endif %}
+    {% if  show_user.profile.background_2%}
+        <div class="item slides">
+          <div class="slide-2" style="background-image: url({{ MEDIA_URL }}{{show_user.profile.background_2}});">
+          </div>
+        </div>
+    {% endif %}
+    {% if  show_user.profile.background_3%}
+        <div class="item slides">
+          <div class="slide-3" style="background-image: url({{ MEDIA_URL }}{{show_user.profile.background_3}});">
+          </div>
+        </div>
+    {% endif %}
+    </div>
+        <!-- <a class="left carousel-control" href="#carousel-example-generic" data-slide="prev"><span class="glyphicon glyphicon-chevron-left"></span></a>
+        <a class="right carousel-control" href="#carousel-example-generic" data-slide="next"><span class="glyphicon glyphicon-chevron-right"></span></a> -->
+    </div>
+</div>
+
+
+{% if editable %}
+  <hr class="custom">
+    <div class="container fluid">
+      <div class="col-md-6">
+        <a href="{% url 'profiles:post_new_product' %}" class="btn btn-primary">Nuevo Producto</a>
+      </div>
+    </div>
+{% endif  %}
+<hr class="custom">
+  <div class="container-fluid ">
+    <div class="col-sm-4">
+      <ul class="list-group">
+        <li class="list-group-item text-muted">
+        <h4>{{ show_user.profile.get_short_name }}</h4>
+        </li>
+        <li class="list-group-item text-right">
+          <span class="pull-left">
+            <strong style="font-family:Lobster;">Email:</strong>
+          </span>
+          {{ show_user.email|default:"missing" }}
+          {% if editable %}
+            {% if show_user.profile.email_verified %}
+              <span class="glyphicon glyphicon-ok-circle" aria-hidden="true" title="Correo electrónico verificado"></span>
+              <span class="sr-only">Verificado</span>
+            {% else %}
+              <span class="glyphicon glyphicon-warning-sign" aria-hidden="true" title="Correo electrónico No verificado"></span>
+              <span class="sr-only">No Verificado</span>
+            {% endif %}
+        </li>
+        <li class="list-group-item text-right">
+            <span class="pull-left"><strong style="font-family: Lobster;">Registrado desde:</strong></span>
+            {{ show_user.date_joined }}
+        </li>
+        <li class="list-group-item text-right">
+            <span class="pull-left"><strong style="font-family: Lobster;">Ultimo ingreso:</strong></span>
+            {{ show_user.last_login }}
+        </li>
+        {% endif %}
+          <li class="list-group-item text-left">
+            <ul class="social-network social-circle">
+              {% if show_user.profile.fb_link %}
+                <li><a href="{{show_user.profile.fb_link}}" class="icoFacebook ico-background" title="Facebook" target="_blank"><i class="fa fa-facebook"></i></a></li>
+              {% endif %}
+              {% if sohw_user.profile.tw_link %}
+                <li><a href="{{show_user.profile.tw_link}}" class="icoTwitter ico-background" title="Twitter" target="_blank"><i class="fa fa-twitter"></i></a></li>
+              {% endif %}
+              {% if show_user.profile.insta_link %}
+                <li><a href="{{show_user.profile.insta_link}}" class="icoInstagram ico-background" title="Instagram" target="_blank"><i class="fa fa-instagram"></i></a></li>
+              {% endif %}
+
+            </ul>
+          </li>
+      </ul>
+    </div>
+    <div class="col-sm-8">
+      <div class="panel panel-default">
+        <div class="panel-heading" style="font-family: Lobster; font-size:25px; color: white;">{{ show_user.get_full_name }}'s Artesanías
+           {% if show_user.profile.slug %}
+             <a href="{% url 'profiles:show' show_user.profile.slug %}">
+             <span class="glyphicon glyphicon-link" aria-hidden="true" title="Profile permalink"></span>
+             <!--//<span class="sr-only">Ver como</span></a> {{show_user.profile.get_absolute_url}}--> </a>
+             <!--{{show_user.profile.slug}}-->
+           {% else %}
+             <a href="https://github.com/arocks/edge/issues/40" target="_blank"><span>No permalink. See this issue.</span></a>
+           {% endif %}
+        </div>
+        <div class="panel-body">
+            <p><strong style="font-size: 20px">Acerca de:</strong> <ul align="left"> {{ show_user.profile.bio }}</ul></p>
+        </div>
+      </div>
+    </div>
+
+    <!--<a href="{% url 'shop:product_list' %}"> visitanos</a>-->
+  </div>
+
+<!-- contact social network -->
+    <!--<div class="col-md-4 col-md-offset-4">-->
+    <!--  <ul class="social-network social-circle">    {% if show_user.profile.fb_link %}-->
+    <!--      <li><a href="{{show_user.profile.fb_link}}" class="icoFacebook ico-background" title="Facebook"><i class="fa fa-facebook"></i></a></li>-->
+    <!--      {% endif %}-->
+    <!--      {% if sohw_user.profile.tw_link %}-->
+    <!--      <li><a href="{{show_user.profile.tw_link}}" class="icoTwitter ico-background" title="Twitter"><i class="fa fa-twitter"></i></a></li>-->
+    <!--      {% endif %}-->
+    <!--      {% if show_user.profile.insta_link %}-->
+    <!--      <li><a href="{{show_user.profile.insta_link}}" class="icoInstagram ico-background" title="Instagram"><i class="fa fa-google-plus"></i></a></li>-->
+    <!--      {% endif %}-->
+
+    <!--  </ul>-->
+    <!--</div>-->
+
+<!-- =========== Embedded Videos ================= -->
+<hr class="custom">
+<!--<div class="container-fluid">-->
+<!--  <div class="video-shared"> -->
+<!--    <iframe src="https://player.vimeo.com/video/32761077" width="440" height="240"-->
+<!--     frameborder="0" title="Jewelry Design Workshop" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>-->
+<!--  </div>-->
+<!--</div>-->
+
+<div class="container-fluid">
+  <button class="btn btn-warning btn-lg btn-block" type="button" data-toggle="collapse" data-target="#collapse-video" aria-expanded="false" aria-controls="collapseExample">Video gallery</button>
+    <div class="collapse" id="collapse-video" >
+      <div class=" video-shared ">
+        {% for video in videos %}
+         {% video video.video '440x240' %}
+          {% video video.video as video %}
+           <td><a href="{{ video.url }}">{{ video.title }} </a></td>
+          {% endvideo %}
+        {% endfor %}
+      </div>
+    </div>
+</div>
+<!--testing social networks for each user-->
+<!--<div class="container-fluid">-->
+<!--  <div class="fb-comments" data-href="https://kaayi.pythonanywhere.com//users/show_user-profile-slug" data-width="500PX" data-numposts="3"></div>-->
+<!--</div>-->
+
+
+ <hr class="custom">
+ <div id="simple"class="justified-gallery" style="background-color: black" >
+
+{% for product in products %}
+  <a href="{{ product.get_absolute_url }}"class="portfolio-box image-frame ">
+
+      <img title="our product" src="{% if product.image %}{% thumbnail product.image 650x650 crop %}{%else %}{% static 'image/noimage.png' %}{% endif %}">
+    <div class="portfolio-box-caption">
+      <div class="portfolio-box-caption-content">
+        <div class="project-category text-faded">
+        {{ product.name }}
+        </div>
+        <div class="project-name">
+        <h3>by:{{ show_user.get_full_name }} {{product.id}}</h3>
+        </div>
+      </div>
+    </div>
+  </a>
+{% endfor %}
+  </div>
+
+
+
+
+
+
+
+<!-- </div> -->
+
+{% endblock container %}
+
+{% block scripts %}
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/es_LA/sdk.js#xfbml=1&version=v2.8&appId=657778311046259";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<script src="{% static 'site/js/site.js' %}"></script>
+<!-- add scripts for animate scrolling -->
+<script src="{% static 'site/js/scrolling-nav.js' %}"></script>
+<script src="{% static 'site/js/jquery.easing.min.js' %}"></script>
+
+<script src = "{%static 'site/js/jquery.justifiedGallery.js' %}"></script>
+<script>
+    $("#simple").justifiedGallery({
+    rowHeight : 220,
+    lastRow : 'nojustify',
+    margins : 15
+    });
+</script>
+<script >
+  var back = ["#DF01D7","#8E44AD","#AEA8D3","#F62459","#DB0A5B","#D64541","#D2527F","#522770","#61AEFF","#EBABD6","#543BC4","#ff21e9","#F88400","#FFDA00","#BF4B9C"];
+  $('.portfolio-box-caption').each(function() {
+    // First random color
+    var rand1 = back[Math.floor(Math.random() * back.length)];
+    // Second random color
+    var rand2 = back[Math.floor(Math.random() * back.length)];
+    var grad = $(this);
+    // Convert Hex color to RGB
+    function convertHex(hex,opacity){
+        hex = hex.replace('#','');
+        r = parseInt(hex.substring(0,2), 16);
+        g = parseInt(hex.substring(2,4), 16);
+        b = parseInt(hex.substring(4,6), 16);
+      // Add Opacity to RGB to obtain RGBA
+        result = 'rgba('+r+','+g+','+b+','+opacity/70+')';
+        return result;
+    }
+    // Gradient rules
+    grad.css('background-color', convertHex(rand1,40) );
+    grad.css("filter", "progid:DXImageTransform.Microsoft.gradient( startColorstr='"+ convertHex(rand1,40) +"', endColorstr='"+ convertHex(rand2,40) +"',GradientType=0 )");
+  })
+</script>
+
+
+{% endblock scripts %}

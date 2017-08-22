@@ -1,0 +1,79 @@
+{% extends "shop/home.html" %}
+{% load static %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% load el_pagination_tags %}
+
+{% block title %}
+		{% if category %}
+			{{ block.super }}{{ category.name }}
+		{% else %}
+			{{ block.super }} {% trans 'Products' %}
+		{% endif %}
+{% endblock %}
+
+	{% block content %}
+
+        <div class="container-fluid">
+            <div class="col-lg-12">
+                <h4 class="text-center">
+                    {% trans 'Handcrafted things' %}
+                </h4>
+            </div>
+        </div>
+<!-- {% for product  in products %}
+  {% if product.category == category %}
+    -{{ product.name }}.
+    {{ product.category }}-
+    {%else %}
+    {%if not category %}
+         /{{ product.name }}.
+            {{ product.category }}/
+            {% endif%}
+    {% endif%}
+{% endfor %} -->
+
+<div id="categories" class="container-fluid">
+    <div class="btn-group btn-group-lg dropdown-menu">
+    <button  class="btn-default btn-lg dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{% if category.name %}{{ category.name }}{% else %}{% trans 'Categories'%}{% endif %}<span class="caret "></span></button>
+        <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
+            <li {% if not category %}class="selected"{% endif %}>
+                <a href="{% url "shop:product_list" %}" class=" ">{% trans 'All' %}</a>
+            </li>
+            <li class="divider"></li>
+        {% for category in categories %}
+            <li {% if category.slug == category.slug %}{% endif %}>
+                <a tabindex="-1" href="{{ category.get_absolute_url }}" class="product-category">{{ category.name }}</a>
+            </li>
+        {% endfor %}
+            <!-- <li class="divider"></li>
+            <li><a tabindex="-1" href="#">Other</a></li> -->
+        </ul>
+    </div>
+ </div>
+
+<div id="pagination" class="endless_page_template">
+        {% include "shop/product_list.html" %}
+</div>
+
+{% endblock  %}
+
+
+{% block scripts %}
+<script src="{% static 'site/js/jquery.js' %}" ></script>
+<script src="{% static 'site/js/el-pagination.js' %}"></script>
+<script src="{% static 'site/js/el-pagination-endless.js' %}"></script>
+<script>$.endlessPaginate({
+            paginateOnScroll: true,
+            // margin for scroll in pixels
+            paginateOnScrollMargin: 120,
+        });
+</script>
+<script >$(function(){
+  $(".dropdown-menu li a").click(function(){
+    $(".btn:first-child").text($(this).text());
+     $(".btn:first-child").val($(this).text());
+  });});
+</script>
+
+{% endblock scripts %}

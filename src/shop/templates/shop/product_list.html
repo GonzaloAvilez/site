@@ -1,0 +1,99 @@
+{% load static %}
+{% load el_pagination_tags %}
+{% load thumbnail %}
+
+{% paginate products %}
+<div  id="b" class="justified-gallery" style="background-color: black;" >
+  {% for product  in products %}
+      {% if product.category == category %}
+        <a href="{{ product.get_absolute_url }}"class="portfolio-box  image-frame">
+          <img  src="{% if product.image %}{{ product.image.url }}{%else %}{% static 'image/noimage.png' %}{% endif %}">
+            <div class="portfolio-box-caption">
+              <div class="portfolio-box-caption-content">
+                <div class="project-category text-faded">
+                <h3>{{ product.name }}</h3>
+                </div>
+                <div class="project-name">
+                <h3>By: {{ product.author.get_short_name }}</h3>
+                </div>
+                <div>{{ product.category }}</div>
+              </div>
+          </div>
+        </a>
+      {% else %}
+      {% if not category %}
+          <a href="{{ product.get_absolute_url }}"class="portfolio-box  image-frame">
+             <img title="profile picture" src="{% if product.image %}{% thumbnail product.image 650x650 crop %}{%else %}{% static 'image/noimage.png' %}{% endif %}">
+              <div class="portfolio-box-caption">
+                <div class="portfolio-box-caption-content">
+                  <div class="project-category text-faded">
+                  <h3>{{ product.name }}</h3>
+                  </div>
+                  <div class="project-name">
+                  </div>
+                  <div>By: {{ product.author.get_short_name }}</div>
+                </div>
+             </div>
+          </a>
+      {% endif %}
+      {% endif %}
+  {% endfor %}
+</div>
+
+{% show_more %}
+
+{% block scripts %}
+<script  src="{% static 'site/js/jquery.js' %}" ></script>
+<script src="{% static 'site/js/el-pagination.js' %}"></script>
+<script src="https://code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+<script src = "{%static 'site/js/jquery.justifiedGallery.js' %}"></script>
+<script>$.endlessPaginate({paginateOnScroll: true});</script>
+<script>
+    $(function(){
+    var i=0;
+    $('.justified-gallery').each(function(){
+        var temp='b'+i;
+        $(this).attr('id',temp);
+        ++i;
+        console.log($(this).attr('id'));
+    });
+  });
+</script>
+<script>
+     $("#b").justifiedGallery({
+    rowHeight : 230,
+    maxRowHeight : 150,
+    cssAnimation : true,
+    lastRow : 'justify',
+    // nojustify or hide for last image
+    margins : 15,
+    border : 8,
+
+    });
+</script>
+
+<script >
+// add color random in gallery images
+  var back = ["#DF01D7","#8E44AD","#AEA8D3","#F62459","#DB0A5B","#D64541","#D2527F","#522770","#61AEFF","#EBABD6","#543BC4","#ff21e9","#F88400","#FFDA00","#BF4B9C"];
+  $('.portfolio-box-caption').each(function() {
+    // First random color
+    var rand1 = back[Math.floor(Math.random() * back.length)];
+    // Second random color
+    var rand2 = back[Math.floor(Math.random() * back.length)];
+    var grad = $(this);
+    // Convert Hex color to RGB
+    function convertHex(hex,opacity){
+        hex = hex.replace('#','');
+        r = parseInt(hex.substring(0,2), 16);
+        g = parseInt(hex.substring(2,4), 16);
+        b = parseInt(hex.substring(4,6), 16);
+      // Add Opacity to RGB to obtain RGBA
+        result = 'rgba('+r+','+g+','+b+','+opacity/50+')';
+        return result;
+    }
+    // Gradient rules
+    grad.css('background-color', convertHex(rand1,40) );
+    grad.css("filter", "progid:DXImageTransform.Microsoft.gradient( startColorstr='"+ convertHex(rand1,40) +"', endColorstr='"+ convertHex(rand2,40) +"',GradientType=0 )");
+  })
+</script>
+{% endblock scripts %}

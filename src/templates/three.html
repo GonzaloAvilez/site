@@ -1,0 +1,2188 @@
+
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% block title %}{{ block.super }}AR{% endblock %}
+
+
+{% block navbar-left %}
+    <li>
+        <div class="select text-right">
+            <label for="videoSource">Cámara: </label>
+            <select id="videoSource"></select>
+        </div>
+    </li>
+    <!--<li>-->
+    <!--    <div class=" text-center">-->
+    <!--        <button id="shot" class="print btn btn-primary" style="margin-top:60px"> print</button>-->
+    <!--    </div>-->
+    <!--</li>-->
+{% endblock %}
+
+
+
+{% block navbar-right %}
+    <ul class="dropdown-menu aux-dropdown" role="menu">
+
+        <div class="select container-fluid">
+            <label for="videoSource">Cámara:</label>
+            <select id="videoSource"></select>
+        </div>
+
+    </ul>
+{% endblock %}
+
+
+
+{% block container %}
+
+<body style="background-color:#000">
+  <div  class="container-fluid">
+    <div hidden id='info' style='position: relative; top: 0px; width: 100%;
+                           font-family:arial; font-weight: bolder; padding-top: 5px;
+                           text-align:center;z-index:-2'>
+    	Augmented Reality with <a href="http://threejs.org" target="_blank">three.js</a>
+    	- works on desktop and mobile
+    	<br/>
+    	require <a href='https://get.webgl.org/'>WebGL</a> and <a href='http://caniuse.com/#feat=stream'>getUserMedia</a> Support
+    	-Put this <a target='blank' href='http://jeromeetienne.github.io/threex.webar/marker/image-marker-265.html'>marker</a>in front of the camera
+    	<br/>
+    	Source:
+    	<a class='webcam' href='javascript:void();'>webcam</a> -
+    	<a class='image'  href='javascript:void();'>image</a> -
+    	<a class='video'  href='javascript:void();'>video</a>
+    </div>
+
+    <!--<div class="container-fluid" style='z-index:-2'>-->
+    <!--<button id="shot" class="print btn btn-primary" style="margin-top:60px"> print</button>-->
+    <!--</div>-->
+
+    <div  id='performanceEnabler' style='position: absolute; top: 50px; right: 10px;
+                                         text-align: right;background-color:rgba(255,255,255,0.2);  padding-left: 10px;
+                                         padding-bottom: 10px;border-width: 0px;z-index:12;
+                                         border-style: solid;'>
+    	<div style='text-align: center;'>OPTIONS</div>
+    	<hr/>
+    	<label id='detectMarkersEnabled' title='to enable/disable marker detection in video'>
+    		Fixed 3d-model	<input type="checkbox" name="fix-model">
+    	</label>
+    	<!--<br/>-->
+    	<label hidden id='markerToObject3DEnabled' title='to enable/disable marker to object3d conversion'>
+    		markerToObject3D <input type="checkbox">
+    	</label>
+    	<!--<br/>-->
+    	<label hidden id='webglRenderEnabled' title='to enable/disable webgl rendering'>
+    		webglRender	<input type="checkbox">
+    	</label>
+    	<!--<br/>-->
+    	<label hidden id='markerDebugEnabled' title='to enable/disable marker debug'>
+    		marker debug	<input type="checkbox">
+    	</label>
+    	<!--<br/>-->
+    </div>
+
+    <div class ='moveGUI' style='position: absolute; top: 60px; right: 2px'></div>
+  </div>
+</body>
+{% endblock container %}
+
+
+{% block scripts%}
+<script src="{% static 'threex/build/three.js' %}"></script>
+<script src="{% static 'threex/build/stats.min.js' %}"></script>
+<script src="{% static 'threex/build/OBJLoader.js' %}"></script>
+<script src="{% static 'threex/build/MTLLoader.js' %}"></script>
+<script src="{% static 'threex/build/JSONLoader.js' %}"></script>
+<script src="{% static 'threex/build/OrbitControls.js' %}"></script>
+
+<!-- include js-aruco -->
+<script src="{% static 'threex/js-aruco/svd.js' %}"></script>
+<script src="{% static 'threex/js-aruco/posit1-patched.js' %}"></script>
+<script src="{% static 'threex/js-aruco/cv.js' %}"></script>
+<script src="{% static 'threex/js-aruco/aruco.js' %}"></script>
+
+<!-- include some extensions -->
+<script src="{% static 'threex/threex.webcamgrabbing.js' %}"></script>
+<script src="{% static 'threex/threex.imagegrabbing.js' %}"></script>
+<script src="{% static 'threex/threex.videograbbing.js' %}"></script>
+<script src="{% static 'threex/threex.jsarucomarker.js' %}"></script>
+<script src="{% static 'threex/dat.gui.min.js' %}"></script>
+
+<script>
+	//////////////////////////////////////////////////////////////////////////////////
+	//		Test if the browser support WebGL and getUserMedia
+	//////////////////////////////////////////////////////////////////////////////////
+	;(function(){
+		// TODO backport those 2 in Detector.js
+		var hasGetUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia) ? true : false
+		var hasMediaStreamTrackSources = navigator.mediaDevices.enumerateDevices() ? true : false
+		var hasWebGL = ( function () { try { var canvas = document.createElement( 'canvas' ); return !! ( window.WebGLRenderingContext && ( canvas.getContext( 'webgl' ) || canvas.getContext( 'experimental-webgl' ) ) ); } catch ( e ) { return false; } } )()
+
+		if( hasWebGL === false ){
+			alert('your browser doesn\'t support navigator.getUserMedia()')
+		}
+		if( hasMediaStreamTrackSources === false ){
+			alert('your browser doesn\'t support MediaStreamTrack.getSources()')
+		}
+		if( hasGetUserMedia === false ){
+			alert('your browser doesn\'t support navigator.getUserMedia()')
+		}
+	})()
+
+	//////////////////////////////////////////////////////////////////////////////////
+	//		enabled/disable various parts
+	//////////////////////////////////////////////////////////////////////////////////
+	var detectMarkersEnabled	= true
+	var markerToObject3DEnabled	= true
+	var webglRenderEnabled		= true
+
+	document.querySelector('#detectMarkersEnabled input').checked	= detectMarkersEnabled
+	document.querySelector('#detectMarkersEnabled input').addEventListener('change', function(){
+		detectMarkersEnabled = document.querySelector('#detectMarkersEnabled input').checked
+	})
+
+	document.querySelector('#markerToObject3DEnabled input').checked= markerToObject3DEnabled
+	document.querySelector('#markerToObject3DEnabled input').addEventListener('change', function(){
+		markerToObject3DEnabled = document.querySelector('#markerToObject3DEnabled input').checked
+	})
+
+	document.querySelector('#webglRenderEnabled input').checked	= webglRenderEnabled
+	document.querySelector('#webglRenderEnabled input').addEventListener('change', function(){
+		webglRenderEnabled = document.querySelector('#webglRenderEnabled input').checked
+		// clear the webgl canvas - thus the last webgl rendering disapears
+		renderer.clear()
+	})
+
+	document.querySelector('#markerDebugEnabled input').checked	= false
+	document.querySelector('#markerDebugEnabled input').addEventListener('change', function(){
+		jsArucoMarker.debugEnabled = document.querySelector('#markerDebugEnabled input').checked
+	})
+
+	//////////////////////////////////////////////////////////////////////////////////
+	//		init Stats for detectMarkers
+	//////////////////////////////////////////////////////////////////////////////////
+	var detectMarkersStats = new Stats();
+	detectMarkersStats.setMode( 1 );
+	document.body.appendChild( detectMarkersStats.domElement );
+        detectMarkersStats.domElement.style.position = 'absolute'
+	detectMarkersStats.domElement.style.bottom = '0px'
+	detectMarkersStats.domElement.style.right = '0px'
+
+	var renderStats = new Stats();
+	renderStats.setMode( 0 );
+	document.body.appendChild( renderStats.domElement );
+        renderStats.domElement.style.position = 'absolute'
+	renderStats.domElement.style.bottom = '0px'
+	renderStats.domElement.style.left = '0px'
+
+	//////////////////////////////////////////////////////////////////////////////////
+	//		Handle ui button
+	//////////////////////////////////////////////////////////////////////////////////
+	document.querySelector('#info .webcam').addEventListener('click', function(event){
+		location.hash	= '#webcam'
+		location.reload()
+	})
+
+	document.querySelector('#info .image').addEventListener('click', function(event){
+		location.hash	= '#image'
+		location.reload()
+	})
+
+	document.querySelector('#info .video').addEventListener('click', function(event){
+		location.hash	= '#video'
+		location.reload()
+	})
+
+	//////////////////////////////////////////////////////////////////////////////////
+	//		Init
+	//////////////////////////////////////////////////////////////////////////////////
+
+	// init renderer
+	var renderer	= new THREE.WebGLRenderer({
+		antialias	: true,
+		alpha		: true,
+	});
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.shadowMap.enabled = true;
+	document.body.appendChild( renderer.domElement );
+// 	renderer.gammaOutput = true;   //supports colors from blender, doing experimentation
+
+	// array of functions for the rendering loop
+	var onRenderFcts = [];
+
+	// init scene and camera
+	var scene = new THREE.Scene()
+    // 	  fov vertical degrees, aspect, near plane, far plane
+	var camera	= new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+	camera.position.z = 750;  //supports more realistic vision (750 for bracelets)
+
+
+    // orbit controls
+    var verify_checkbox = document.querySelector("input[name=fix-model]");
+    var controls = new THREE.OrbitControls( camera, renderer.domElement );
+    // controls.enableRotate = false;
+    // controls.enableZoom = false;
+    controls.center.set = (0,0,0);
+    verify_checkbox.onchange = function(){
+        if(!this.checked ) {
+             	controls.target.set( 0, 0, 0 );
+             	controls.maxPolarAngle = Math.PI * 5.5;
+             	controls.enableRotate = true;
+                // 	controls.addEventListener( 'change', renderer ); // remove when using animation loop
+            	// enable animation loop when using damping or autorotation
+            	//controls.enableDamping = true;
+            	//controls.dampingFactor = 0.25;
+            	controls.enableZoom = true; // adjust with scroll and double touch(caution last one)
+                controls.update();
+        }
+        else{
+
+            controls.enableRotate = false;
+            controls.enableZoom = false;
+
+        }
+    };
+
+
+
+
+
+	//////////////////////////////////////////////////////////////////////////////////
+	//		set 3 point lighting						//
+	//////////////////////////////////////////////////////////////////////////////////
+
+    ;(function(){
+		var object3d	= new THREE.AmbientLight(0xcecaca)  // 0x212121
+		object3d.name	= 'Ambient light'
+		scene.add(object3d)
+		var object3d	= new THREE.DirectionalLight('white', 0.1*1.6)
+		object3d.position.set(-6,1,3).setLength(1)
+		object3d.name	= 'Back light'
+		scene.add(object3d)
+		var object3d	= new THREE.DirectionalLight('white', 0.9*1.6)          //left light or viceverse depends of marker position
+		object3d.position.set(-3, -2, 0)
+		object3d.name 	= 'Key light firts'
+		scene.add(object3d)
+		var object3d	= new THREE.DirectionalLight('white', 0.9*1.6)          //right light or viceverse depends of marker position
+		object3d.position.set(3, 2, 0)
+		object3d.name 	= 'Key light second'
+		scene.add(object3d)
+		var object3d	= new THREE.DirectionalLight('white', 0.2*1)
+		object3d.position.set(0,18, 26)
+		object3d.name	= 'Fill light'
+		scene.add(object3d)
+    	})()
+
+    var Render=new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
+
+
+
+	//////////////////////////////////////////////////////////////////////////////////
+	//		create a markerObject3D
+	//////////////////////////////////////////////////////////////////////////////////
+	var markerObject3D = new THREE.Object3D()
+	scene.add(markerObject3D)
+
+	//////////////////////////////////////////////////////////////////////////////////
+	//		add an object in the markerObject3D
+	//////////////////////////////////////////////////////////////////////////////////
+
+	// add some debug display
+	;(function(){
+		var geometry = new THREE.PlaneGeometry(1,1,10,10)
+		var material = new THREE.MeshBasicMaterial( {
+			wireframe : true, transparent: true, opacity: 0.05
+		})
+		var mesh = new THREE.Mesh(geometry, material);
+		markerObject3D.add( mesh );
+
+		var mesh = new THREE.AxisHelper
+		markerObject3D.add( mesh );
+	})()
+
+    // // add a awesome 2D-logo to the scene
+    //         	;(function(){
+    //         		var material = new THREE.SpriteMaterial({
+    //         			map: THREE.ImageUtils.loadTexture( "{% static 'site/img/zarape.png' %}" ),   transparent: true, opacity: 0.9
+    //         		});
+    //         		var geometry = new THREE.BoxGeometry(1,1,1)
+    //         		var object3d = new THREE.Sprite(material );
+    //         		object3d.scale.set( 6,8, 3 );
+    //         		markerObject3D.add(object3d)
+    //         	})()
+
+
+        // 	;(function(){
+        //     		var material = new THREE.SpriteMaterial({
+        //     			map: THREE.ImageUtils.loadTexture( "{% static 'site/img/fenix.png' %}" ),   transparent: true, opacity: 0.9
+        //     		});
+        //     		var geometry = new THREE.BoxGeometry(1,1,1)
+        //     		var object3d = new THREE.Sprite(material );
+        //     		object3d.scale.set( 6,8, 3 );
+        //     // 		object3d.rotation.x = Math.PI/2;
+        //     		markerObject3D.add(object3d)
+        //     	})()
+
+// ********************************************************************************************************************************
+//                                                   load object from  OBJLoader
+// ********************************************************************************************************************************
+
+    // 	;(function(){
+    //     var loadOBJ = function() {
+    //       var loader = new THREE.OBJLoader();
+    //       loader.load( "{% static 'site/img/trompo.obj' %}", function onLoad(mesh){
+    //     		mesh.scale.set(1,1,1).multiplyScalar(1/20)
+    //     		mesh.rotation.x = Math.PI/2
+    //     		markerObject3D.add( mesh );
+    //     //Go through all children of the loaded object and search for a Mesh
+    //       //This allow us to check if the children is an instance of the Mesh constructor
+    // //   if (child instanceof THREE.Mesh) {
+    // //     child.material.color = new THREE.Color(0X00FF00);
+    // //     //Sometimes there are some vertex normals missing in the .obj files, ThreeJs will compute them
+    // //     child.geometry.computeVertexNormals();
+    // //   }
+
+    //   });
+
+    // };
+    // markerObject3D.add(loadOBJ())
+    // })()
+
+
+// *****************************************************************************************************************************************
+ //                       load a JSON resource   from     ObjectLoader       tiger sculpture
+// *****************************************************************************************************************************************
+
+    //   ;(function(){
+    //     //  texture to env reflect
+    //     var path="{% static 'site/img/taxco' %}";
+    //     var extension='.jpg';
+    //     var urls=[
+    //         path + 'posx' + extension, path + 'negx' + extension,
+    //         path + 'posy' + extension, path + 'negy' + extension,
+    //         path + 'posz' + extension, path + 'negz' + extension,
+    //         ];
+    //     var textureCube_to_Reflect = THREE.ImageUtils.loadTextureCube (urls);
+    //     //default values for custom sterling silver material
+    //     var parameters = {
+    //                         color : 0x212121,       //set default value
+    //                 		opacity: 1.00,
+    //                 		emissive : 0XCCCCCC,
+    //                 		emissiveIntensity : 0.1,
+    //                 		envMap : true,
+    //                 		roughness : 0.2,
+    //                 		metalness : 0.1  ,
+    //                 		smooth : true,
+    //                 	}
+
+    //     //load JSON object or scene
+    //     var loader = new THREE.ObjectLoader();
+    //     loader.load("{% static 'site/img/tigre.json' %}",function ( object,materials ) {
+    //                 console.log (object);
+
+    //                 var materials = new THREE.MeshStandardMaterial({
+    //                                     color : parameters.color,                           //as a default values
+    //                                     emissive   : parameters.emissive,
+    //                                     emissiveIntensity : parameters.emissiveIntensity,
+    //                                     roughness : parameters.roughness,
+    //                                     metalness: parameters.metalness,
+    //                                     envMap     : textureCube_to_Reflect,
+    //                                     side : THREE. DoubleSide, // BackSide and DoubleSide
+    //                                     opacity : 1,
+    //                                     shading : THREE.SmoothShading, // or THREE.FlatShanding
+    //                 })
+    //                 var tiger = object.getObjectByName("tiger");
+    //                 var base = object.getObjectByName("base");
+    //                 console.log (base);
+    //                  console.log (tiger);
+
+    //                 tiger.traverse(function(child) {     //change hole values for materials inside json  and set child.material
+    //                     if (child instanceof THREE.Mesh) {
+    //                         child.material = materials;
+    //                         child.castShadow = true;
+    //                     }
+    //                 });
+    //                 base.material.side = THREE.DoubleSide;  // access material property one by one object.material.property
+    //                 base.material.roughness = 1.0;
+
+    //                 var object3d = new THREE.Mesh( tiger,materials );
+    //                 object3d.scale.set(1,1,1).multiplyScalar(4/1)
+    //           		object3d.rotation.x = Math.PI/2
+    //          		markerObject3D.add( tiger );
+
+    //          		var second3d = new THREE.Mesh(object,materials);
+    //          		second3d.scale.set(1,1,1).multiplyScalar(4/1)
+    //           		second3d.rotation.x = Math.PI/2
+    //          		markerObject3D.add( object );
+
+    //          		var gui = new dat.GUI({
+    //              	    autoPlace: false,
+    //                     width: 300
+    //              	});
+
+    //                 var customContainer = $('.moveGUI').append($(gui.domElement));
+    //             	gui.addFolder("about material");
+    //             		  gui.addColor(parameters, 'color').onChange(function(e) {
+    //                         materials.color = new THREE.Color(e);       // dinamic value
+    //                     });
+    //                     	gui.addColor(parameters, 'emissive').onChange(function(e){
+    //             			materials.emissive = new THREE.Color(e);
+    //             		})
+    //             			gui.add(parameters,'opacity',0, 1).onChange(function(){
+    //             		    materials.opacity =  parameters.opacity;
+    //             		})
+    //             		gui.add(parameters, 'emissiveIntensity',0,1).onChange(function(){
+    //             			materials.emissiveIntensity = parameters.emissiveIntensity;
+    //             		})
+    //             		gui.add(parameters,'roughness',0,1).onChange(function(){
+    //             			materials.roughness = parameters.roughness;
+    //             		})
+    //             		gui.add(parameters,'metalness',0,1).onChange(function(){
+    //             			materials.metalness = parameters.metalness;
+    //             		})
+    //             		gui.add(parameters,'envMap',0,1).onChange(function(envmap){
+    //             			if ( envmap === true ) {
+    //                 			materials.envMap = parameters.envMap;
+    //                 		} else {
+    //                 			materials.envMap = null;
+    //                 		}
+    //             		})
+    //             		gui.add(parameters,'smooth',0,1).onChange(function(){
+    //             			materials.smooth = parameters.smooth;
+    //             		})
+    //             	gui.open();
+
+    //     	    } //end for function(object,materials)
+    //     );
+    // })()
+
+
+// **********************************************************************************************************************************
+//                                  ObjectLoader JSON scene called tyre_ring
+// **********************************************************************************************************************************
+    //   ;(function(){
+    //     //  texture to env reflect
+    //     var path="{% static 'site/img/taxco' %}";
+    //     var extension='.jpg';
+    //     var urls=[
+    //         path + 'posx' + extension, path + 'negx' + extension,
+    //         path + 'posy' + extension, path + 'negy' + extension,
+    //         path + 'posz' + extension, path + 'negz' + extension,
+    //         ];
+    //     var textureCube_to_Reflect = THREE.ImageUtils.loadTextureCube (urls);
+    //     //default values for custom sterling silver material
+    //     var parameters = {
+    //                         color : 0xB5B5B5,       //set default value
+    //                 		opacity: 1.00,
+    //                 		emissive : 0XCCCCCC,
+    //                 		emissiveIntensity : 0.1,
+    //                 		envMap : true,
+    //                 		roughness : 0.2,
+    //                 		metalness : 0.1  ,
+    //                 		smooth : true,
+    //                 	}
+
+    //     //load JSON object or scene
+    //     var loader = new THREE.ObjectLoader();
+    //     loader.load("{% static 'site/img/tyre_ring.json' %}",function ( object ,materials ) {
+    //                 console.log (object);
+
+    //                 var materials = new THREE.MeshStandardMaterial({
+    //                                     color : parameters.color,                           //as a defalult value
+    //                                     emissive   : parameters.emissive,
+    //                                     emissiveIntensity : parameters.emissiveIntensity,
+    //                                     roughness : parameters.roughness,
+    //                                     metalness: parameters.metalness,
+    //                                     envMap     : textureCube_to_Reflect,
+    //                                     // side : THREE.BackSide, retifica render de objecto inverso en anillo.json
+    //                                     side : THREE. DoubleSide, // BackSide and DoubleSide
+    //                                     opacity : 1,
+    //                                     shading : THREE.SmoothShading, // or THREE.FlatShanding
+    //                 })
+    //                 var ring = object.getObjectByName("ring");
+    //                 // var helices = object.getObjectByName("helices");
+    //                 // helices.material.metalness = 0.8;
+    //                 console.log(ring);
+    //                 // var object3d = new THREE.Mesh( tiger,materials ); unnecesaary to define Mesh function, objectloader do this internally
+    //                 object.rotation.y = Math.PI/2;
+    //                 object.rotation.z = Math.PI/2;
+    //                 object.scale.set(1,1,1).multiplyScalar(1/3)
+    //                 object.traverse(function(child) {     //change hole values for materials inside json  and set child.material
+    //                     if (child instanceof THREE.Mesh) {
+    //                         child.material = materials;
+    //                     }
+    //                 });
+    //          		markerObject3D.add( object );
+
+
+    //          		var gui = new dat.GUI({
+    //              	    autoPlace: false,
+    //                     width: 300
+    //              	});
+
+    //                 var customContainer = $('.moveGUI').append($(gui.domElement));
+    //             	gui.addFolder("about material");
+    //             		  gui.addColor(parameters, 'color').onChange(function(e) {
+    //                         materials.color = new THREE.Color(e);       // dinamic value
+    //                     });
+    //                     	gui.addColor(parameters, 'emissive').onChange(function(e){
+    //             			materials.emissive = new THREE.Color(e);
+    //             		})
+    //             			gui.add(parameters,'opacity',0, 1).onChange(function(){
+    //             		    materials.opacity =  parameters.opacity;
+    //             		})
+    //             		gui.add(parameters, 'emissiveIntensity',0,1).onChange(function(){
+    //             			materials.emissiveIntensity = parameters.emissiveIntensity;
+    //             		})
+    //             		gui.add(parameters,'roughness',0,1).onChange(function(){
+    //             			materials.roughness = parameters.roughness;
+    //             		})
+    //             		gui.add(parameters,'metalness',0,1).onChange(function(){
+    //             			materials.metalness = parameters.metalness;
+    //             		})
+    //             		gui.add(parameters,'envMap',0,1).onChange(function(envmap){
+    //             			if ( envmap === true ) {
+    //                 			materials.envMap = parameters.envMap;
+    //                 		} else {
+    //                 			materials.envMap = null;
+    //                 		}
+    //             		})
+    //             		gui.add(parameters,'smooth',0,1).onChange(function(){
+    //             			materials.smooth = parameters.smooth;
+    //             		})
+    //             	gui.open();
+    //     	    } //end for function(object,materials)
+    //     );
+    // })()
+
+
+
+// **********************************************************************************************************************************
+//                                  ObjectLoader JSON scene called Ring_diamod_triangle
+// **********************************************************************************************************************************
+
+    //   ;(function(){
+    //     //  texture to env reflect
+    //     var path="{% static 'site/img/taxco' %}";
+    //     var extension='.jpg';
+    //     var urls=[
+    //         path + 'posx' + extension, path + 'negx' + extension,
+    //         path + 'posy' + extension, path + 'negy' + extension,
+    //         path + 'posz' + extension, path + 'negz' + extension,
+    //         ];
+    //     var textureCube_to_Reflect = THREE.ImageUtils.loadTextureCube (urls);
+    //     //default values for custom sterling silver material
+    //     var parameters = {
+    //                         color : 0x82dbff,       //set default value
+    //                 		opacity: 1.00,          // ok
+    //                 		emissive : 0Xbc1a1a,     //
+    //                 		emissiveIntensity : 0.08,  //ok
+    //                 		envMap : true,           //
+    //                 		roughness : 0.45,         //
+    //                 		metalness : 0.7,           //
+    //                 		smooth : true,
+    //                 	}
+    //     var front_materials = new THREE.MeshStandardMaterial({
+    //                                     color : parameters.color,                           //as a defalult value
+    //                                     emissive   : parameters.emissive,
+    //                                     emissiveIntensity : parameters.emissiveIntensity,
+    //                                     roughness : parameters.roughness,
+    //                                     metalness: parameters.metalness,
+    //                                     // envMap     : textureCube_to_Reflect,
+    //                                     // side : THREE.BackSide, retifica render de objecto inverso en anillo.json
+    //                                     side : THREE.FrontSide, // BackSide and DoubleSide
+    //                                     opacity : 0.5,
+    //                                     shading : THREE.SmoothShading, // or THREE.FlatShanding
+    //                                     transparent: true,
+    //                 })
+    //     var back_materials = new THREE.MeshStandardMaterial({
+    //                         color : parameters.color,                           //as a defalult value
+    //                         emissive   : parameters.emissive,
+    //                         emissiveIntensity : parameters.emissiveIntensity,
+    //                         roughness : parameters.roughness,
+    //                         metalness: parameters.metalness,
+    //                         envMap     : textureCube_to_Reflect,
+    //                         side : THREE.BackSide, // BackSide and DoubleSide
+    //                         opacity : parameters.opacity,
+    //                         shading : THREE.SmoothShading, // or THREE.FlatShanding
+    //                         // transparent: true,
+    //                  })
+    //     var  silver_materials = new THREE.MeshStandardMaterial( {
+    //                                     color : parameters.color,                           //as a defalult value
+    //                                     emissive   : parameters.emissive,
+    //                                     emissiveIntensity : parameters.emissiveIntensity,
+    //                                     roughness : parameters.roughness,
+    //                                     metalness: parameters.metalness,
+    //                                     envMap     : textureCube_to_Reflect,
+    //                                     shading : THREE.SmoothShading,
+    //                                     side : THREE.DoubleSide,
+    //                                 } );
+    //     //load JSON object or scene
+    //     var loader = new THREE.ObjectLoader();
+    //     loader.load("{% static 'site/img/diamond_triangle.json' %}",function ( object ) {
+    //                 console.log (object);
+
+    //                 var diamond = object.getObjectByName("diamond");
+    //                 diamond.scale.set(1,1,1).multiplyScalar(1/2);
+    //                 var ring = object.getObjectByName("ring")
+    //                 ring.scale.set(1,1,1).multiplyScalar(1/2);
+    //                 console.log(diamond);
+    //                 console.log(ring);
+    //                 diamond.traverse(function(child) {     //change hole values for materials inside json  and set child.material
+    //                     if (child instanceof THREE.Mesh) {
+    //                         child.material = back_materials;
+    //                         var second = child.clone();
+    //                         second.material = front_materials;
+
+    //                         var parent = new THREE.Group();
+    //                         parent.add(second);
+    //                         parent.add(child);
+    //                         markerObject3D.add(parent);
+    //                     }
+    //                 });
+    //                 ring.traverse(function(child) {     //change hole values for materials inside json  and set child.material
+    //                     if (child instanceof THREE.Mesh) {
+    //                         child.material = silver_materials;
+    //                         child.geometry.computeVertexNormals();
+    //                     }
+    //                 });
+    //                 markerObject3D.add(ring);
+
+    //          		var gui = new dat.GUI({
+    //              	    autoPlace: false,
+    //                     width: 300
+    //              	});
+
+    //                 var customContainer = $('.moveGUI').append($(gui.domElement));
+    //             	gui.addFolder("about material");
+    //             		  gui.addColor(parameters, 'color').onChange(function(e) {
+    //                         silver_materials.color = new THREE.Color(e);       // dinamic value
+    //                     });
+    //                     	gui.addColor(parameters, 'emissive').onChange(function(e){
+    //             			silver_materials.emissive = new THREE.Color(e);
+    //             		})
+    //             			gui.add(parameters,'opacity',0, 1).onChange(function(){
+    //             		    silver_materials.opacity =  parameters.opacity;
+    //             		})
+    //             		gui.add(parameters, 'emissiveIntensity',0,1).onChange(function(){
+    //             			silver_materials.emissiveIntensity = parameters.emissiveIntensity;
+    //             		})
+    //             		gui.add(parameters,'roughness',0,1).onChange(function(){
+    //             			silver_materials.roughness = parameters.roughness;
+    //             		})
+    //             		gui.add(parameters,'metalness',0,1).onChange(function(){
+    //             			silver_materials.metalness = parameters.metalness;
+    //             		})
+    //             		gui.add(parameters,'envMap',0,1).onChange(function(envmap){
+    //             			if ( envmap === true ) {
+    //                 			silver_materials.envMap = parameters.envMap;
+    //                 		} else {
+    //                 			silver_materials.envMap = null;
+    //                 		}
+    //             		})
+    //             		gui.add(parameters,'smooth',0,1).onChange(function(){
+    //             			silver_materials.smooth = parameters.smooth;
+    //             		})
+    //             	gui.open();
+
+    //     	    } //end for function(object,materials)
+    //     );
+    // })()
+
+// **********************************************************************************************************************************
+//                                  ObjectLoader JSON scene called square_earrings
+// **********************************************************************************************************************************
+
+    //   ;(function(){
+    //     //  texture to env reflect
+    //     var path="{% static 'site/img/taxco' %}";
+    //     var extension='.jpg';
+    //     var urls=[
+    //         path + 'posx' + extension, path + 'negx' + extension,
+    //         path + 'posy' + extension, path + 'negy' + extension,
+    //         path + 'posz' + extension, path + 'negz' + extension,
+    //         ];
+    //     var textureCube_to_Reflect = THREE.ImageUtils.loadTextureCube (urls);
+    //     //default values for custom sterling silver material
+    //     var parameters = {
+    //                         color : 0xdbdbdb,       //set default value
+    //                 		opacity: 1.0,          // ok
+    //                 		emissive : 0Xbc1a1a,     //
+    //                 		emissiveIntensity : 0.08,  //ok
+    //                 		envMap : true,           //
+    //                 		roughness : 0.45,         //
+    //                 		metalness : 0.7,           //
+    //                 		smooth : true,
+    //                 	}
+    //     var front_materials = new THREE.MeshStandardMaterial({
+    //                                     color : parameters.color,                           //as a defalult value
+    //                                     emissive   : parameters.emissive,
+    //                                     emissiveIntensity : parameters.emissiveIntensity,
+    //                                     roughness : parameters.roughness,
+    //                                     metalness: parameters.metalness,
+    //                                     envMap     : textureCube_to_Reflect,
+    //                                     side : THREE.BackSide,
+    //                                     side : THREE.FrontSide, // BackSide and DoubleSide
+    //                                     opacity : 0.5,
+    //                                     shading : THREE.SmoothShading, // or THREE.FlatShanding
+    //                                     transparent: true,
+    //                 })
+    //     var back_materials = new THREE.MeshStandardMaterial({
+    //                         color : parameters.color,                           //as a defalult value
+    //                         emissive   : parameters.emissive,
+    //                         emissiveIntensity : parameters.emissiveIntensity,
+    //                         roughness : parameters.roughness,
+    //                         metalness: parameters.metalness,
+    //                         envMap     : textureCube_to_Reflect,
+    //                         side : THREE.BackSide,
+    //                         opacity : parameters.opacity,
+    //                         shading : THREE.SmoothShading, // or THREE.FlatShanding
+    //                         transparent: true,
+    //                  })
+    //     var  silver_materials = new THREE.MeshStandardMaterial( {
+    //                                     color : 0xe2e2e2,                           //as a defalult value
+    //                                     emissive   : parameters.emissive,
+    //                                     emissiveIntensity : parameters.emissiveIntensity,
+    //                                     roughness : parameters.roughness,
+    //                                     metalness: parameters.metalness,
+    //                                     envMap     : textureCube_to_Reflect,
+    //                                     shading : THREE.SmoothShading,
+    //                                     side : THREE.DoubleSide,
+    //                                 } );
+    //     var  back_black_material = new THREE.MeshStandardMaterial( {
+    //                                     color : 0x212121,                           //as a defalult value
+    //                                     opacity : 1.0,
+    //                                     emissive   : 0xbc1a1a,
+    //                                     emissiveIntensity : 0.0,
+    //                                     roughness : 0.45,
+    //                                     metalness: 1.0,
+    //                                     envMap     : textureCube_to_Reflect,
+    //                                     shading : THREE.SmoothShading,
+    //                                     side : THREE.BackSide,
+    //                                 } );
+    //     var  front_black_material = new THREE.MeshStandardMaterial( {
+    //                                     color : 0x212121,                           //as a defalult value
+    //                                     opacity : 0.9,
+    //                                     emissive   : 0xbc1a1a,
+    //                                     emissiveIntensity : 0.0,
+    //                                     roughness : 0.45,
+    //                                     metalness: 1.0,
+    //                                     envMap     : textureCube_to_Reflect,
+    //                                     shading : THREE.SmoothShading,
+    //                                     side : THREE.FrontSide,
+    //                                     transparent: true,
+    //                                 } );
+
+    //     //load JSON object or scene
+    //     var loader = new THREE.ObjectLoader();
+    //     loader.load("{% static 'site/img/square_earrings.json' %}",function ( object ) {
+    //                 console.log (object); //only as a debug mode default
+
+    //                 var balls = object.getObjectByName("balls");
+    //                 balls.scale.set(1,1,1).multiplyScalar(1/2);
+
+    //                 var silver = object.getObjectByName("silver");
+    //                 silver.scale.set(1,1,1).multiplyScalar(1/2);
+
+    //                 var central_gem = object.getObjectByName("central_gem");
+    //                 central_gem.scale.set(1,1,1).multiplyScalar(1/2);
+
+    //                 var black_gem = object.getObjectByName("black_gem");
+    //                 black_gem.scale.set(1,1,1).multiplyScalar(1/2);
+
+    //                 var resina = object.getObjectByName("resina");
+    //                 resina.scale.set(1,1,1).multiplyScalar(1/2);
+    //                 markerObject3D.add(resina);
+    //                 var resina_clone = resina.clone();   // replicate for second earring
+    //                 resina_clone.position.set(-4,1,0);
+    //                 resina_clone.rotation.y = 10*Math.PI/6;
+    //                 markerObject3D.add(resina_clone);
+
+    //                 var poste = object.getObjectByName("poste");
+    //                 poste.scale.set(1,1,1).multiplyScalar(1/2);
+
+    //                 console.log(central_gem);
+    //                 console.log(black_gem);
+
+    //                 central_gem.traverse(function(child) {     //change hole values for materials inside json  and set child.material
+    //                     if (child instanceof THREE.Mesh) {
+    //                         child.material = back_materials;
+    //                         var second = child.clone();
+    //                         second.material = front_materials;
+    //                         markerObject3D.add(child);
+    //                         markerObject3D.add(second);
+
+    //                         var child_clone = child.clone();   // replicate for second earring
+    //                         child_clone.position.set(-4,1,0);
+    //                         child_clone.rotation.y = 10*Math.PI/6;
+    //                         markerObject3D.add(child_clone);
+
+    //                         var second_clone = second.clone();   // replicate for second earring
+    //                         second_clone.position.set(-4,1,0);
+    //                         second_clone.rotation.y = 10*Math.PI/6;
+    //                         markerObject3D.add(second_clone);
+
+
+    //                         // var parent = new THREE.Group();          // LOSING original position properties  when new THREE group
+    //                         // parent.add(second);
+    //                         // parent.add(child);
+    //                         // markerObject3D.add(parent);
+
+    //                         // var central_gem_clone = parent.clone();   // replicate for second earring
+    //                         // central_gem_clone.position.set(-5,-5,-5);
+    //                         // // central_gem_clone.rotation.x = 2*Math.PI/2;
+    //                         // console.log(central_gem_clone);
+    //                         // markerObject3D.add(central_gem_clone);
+    //                     }
+    //                 });
+    //                 black_gem.traverse(function(child) {     //change hole values for materials inside json  and set child.material
+    //                     if (child instanceof THREE.Mesh) {
+    //                         child.material = back_black_material;
+    //                         var second = child.clone();
+    //                         second.material = front_black_material;
+    //                         markerObject3D.add(child);
+    //                         markerObject3D.add(second);
+
+    //                         var child_clone = child.clone();   // replicate for second earring
+    //                         child_clone.position.set(-4,1,0);
+    //                         child_clone.rotation.y = 10*Math.PI/6;
+    //                         markerObject3D.add(child_clone);
+
+    //                         var second_clone = second.clone();   // replicate for second earring
+    //                         second_clone.position.set(-4,1,0);
+    //                         second_clone.rotation.y = 10*Math.PI/6;
+    //                         markerObject3D.add(second_clone);
+
+    //                         // var parent = new THREE.Group();
+    //                         // parent.add(second);
+    //                         // parent.add(child);
+    //                         // markerObject3D.add(parent);
+
+    //                         // var black_gem_clone = parent.clone();   // replicate for second earring
+    //                         // black_gem_clone.position.set(-5,-5,-5);
+    //                         // black_gem_clone.rotation.x = 3*Math.PI/2;
+    //                         // markerObject3D.add(black_gem_clone);
+
+    //                     }
+    //                 });
+    //                  poste.traverse(function(child) {     //change hole values for materials inside json  and set child.material
+    //                     if (child instanceof THREE.Mesh) {
+    //                         child.material = silver_materials;
+    //                         child.geometry.computeVertexNormals();
+
+    //                         var child_clone = child.clone();   // replicate for second earring
+    //                         child_clone.position.set(-4,1,0);
+    //                         child_clone.rotation.y = 10*Math.PI/6;
+    //                         markerObject3D.add(child_clone);
+    //                     }
+    //                 });
+    //                 markerObject3D.add(poste);
+
+    //                 balls.traverse(function(child) {     //change hole values for materials inside json  and set child.material
+    //                     if (child instanceof THREE.Mesh) {
+    //                         child.material = silver_materials;
+    //                         child.geometry.computeVertexNormals();
+
+    //                         var child_clone = child.clone();   // replicate for second earring
+    //                         child_clone.position.set(-4,1,0);  // (x,y,z)
+    //                         child_clone.rotation.y =10*Math.PI/6;
+    //                         markerObject3D.add(child_clone);
+    //                     }
+    //                 });
+    //                 markerObject3D.add(balls);
+
+    //                 silver.traverse(function(child) {     //change hole values for materials inside json  and set child.material
+    //                     if (child instanceof THREE.Mesh) {
+    //                         child.material = silver_materials;
+    //                         child.geometry.computeVertexNormals();
+
+    //                         var child_clone = child.clone();   // replicate for second earring
+    //                         child_clone.position.set(-4,1,0);
+    //                         child_clone.rotation.y = 10*Math.PI/6; //(10pi/6 =300 degrees)
+    //                         markerObject3D.add(child_clone);
+    //                     }
+    //                 });
+
+    //                 markerObject3D.add(silver);
+    //                 //  markerObject3D.add(object);
+
+
+
+
+
+    //          		var gui = new dat.GUI({
+    //              	    autoPlace: false,
+    //                     width: 300
+    //              	});
+
+    //                 var customContainer = $('.moveGUI').append($(gui.domElement));
+    //             	   gui.addFolder("about material");
+    //             		  gui.addColor(parameters, 'color').onChange(function(e) {
+    //                         silver_materials.color = new THREE.Color(e);       // dinamic value
+    //                     });
+    //                     	gui.addColor(parameters, 'emissive').onChange(function(e){
+    //             			silver_materials.emissive = new THREE.Color(e);
+    //             		})
+    //             			gui.add(parameters,'opacity',0, 1).onChange(function(){
+    //             		    silver_materials.opacity =  parameters.opacity;
+    //             		})
+    //             		gui.add(parameters, 'emissiveIntensity',0,1).onChange(function(){
+    //             			silver_materials.emissiveIntensity = parameters.emissiveIntensity;
+    //             		})
+    //             		gui.add(parameters,'roughness',0,1).onChange(function(){
+    //             			silver_materials.roughness = parameters.roughness;
+    //             		})
+    //             		gui.add(parameters,'metalness',0,1).onChange(function(){
+    //             			silver_materials.metalness = parameters.metalness;
+    //             		})
+    //             		gui.add(parameters,'envMap',0,1).onChange(function(envmap){
+    //             			if ( envmap === true ) {
+    //                 			silver_materials.envMap = parameters.envMap;
+    //                 		} else {
+    //                 			silver_materials.envMap = null;
+    //                 		}
+    //             		})
+    //             		gui.add(parameters,'smooth',0,1).onChange(function(){
+    //             			silver_materials.smooth = parameters.smooth;
+    //             		})
+    //             	gui.open();
+
+    //         		var gui = new dat.GUI({
+    //                  	    autoPlace: false,
+    //                         width: 300
+    //                      	});
+
+    //                 var customContainer = $('.moveGUI').append($(gui.domElement));
+    //             	gui.addFolder("about material");
+    //             		  gui.addColor(parameters, 'color').onChange(function(e) {
+    //                         front_materials.color = new THREE.Color(e);       // dinamic value
+    //                     });
+    //                     	gui.addColor(parameters, 'emissive').onChange(function(e){
+    //             			front_materials.emissive = new THREE.Color(e);
+    //             		})
+    //             			gui.add(parameters,'opacity',0, 1).onChange(function(){
+    //             		    front_materials.opacity =  parameters.opacity;
+    //             		})
+    //             		gui.add(parameters, 'emissiveIntensity',0,1).onChange(function(){
+    //             			front_materials.emissiveIntensity = parameters.emissiveIntensity;
+    //             		})
+    //             		gui.add(parameters,'roughness',0,1).onChange(function(){
+    //             			front_materials.roughness = parameters.roughness;
+    //             		})
+    //             		gui.add(parameters,'metalness',0,1).onChange(function(){
+    //             			front_materials.metalness = parameters.metalness;
+    //             		})
+    //             		gui.add(parameters,'envMap',0,1).onChange(function(envmap){
+    //             			if ( envmap === true ) {
+    //                 			front_materials.envMap = parameters.envMap;
+    //                 		} else {
+    //                 			front_materials.envMap = null;
+    //                 		}
+    //             		})
+    //             		gui.add(parameters,'smooth',0,1).onChange(function(){
+    //             			front_materials.smooth = parameters.smooth;
+    //             		})
+    //             	gui.open();
+
+    //     	    } //end for function(object,materials)
+    //     );
+    // })()
+
+
+// **********************************************************************************************************************************
+//                                  ObjectLoader JSON scene called pulsera leopardo
+// **********************************************************************************************************************************
+
+//  ;(function(){
+//         //  texture to env reflect
+//         var path="{% static 'site/img/taxco' %}";
+//         var extension='.jpg';
+//         var urls=[
+//             path + 'posx' + extension, path + 'negx' + extension,
+//             path + 'posy' + extension, path + 'negy' + extension,
+//             path + 'posz' + extension, path + 'negz' + extension,
+//             ];
+//         var textureCube_to_Reflect = THREE.ImageUtils.loadTextureCube (urls);
+//         //default values for custom sterling silver material
+//         var parameters = {
+//                             color : 0x82dbff,       //set default value
+//                     		opacity: 1.00,
+//                     		emissive : 0Xbc1a1a,
+//                     		emissiveIntensity : 0.08,
+//                     		envMap : true,
+//                     		roughness : 0.45,
+//                     		metalness : 0.7,
+//                     		smooth : true,
+//                     	}
+//         var front_materials = new THREE.MeshStandardMaterial({
+//                                         color : parameters.color,                           //as a defalult value
+//                                         emissive   : parameters.emissive,
+//                                         emissiveIntensity : parameters.emissiveIntensity,
+//                                         roughness : parameters.roughness,
+//                                         metalness: parameters.metalness,
+//                                         envMap     : textureCube_to_Reflect,
+//                                         // side : THREE.BackSide, retifica render de objecto inverso en anillo.json
+//                                         side : THREE.FrontSide, // BackSide and DoubleSide
+//                                         opacity : 0.5,
+//                                         shading : THREE.SmoothShading, // or THREE.FlatShanding
+//                                         transparent: true,
+//                     })
+//         var back_materials = new THREE.MeshStandardMaterial({
+//                             color : parameters.color,                           //as a defalult value
+//                             emissive   : parameters.emissive,
+//                             emissiveIntensity : parameters.emissiveIntensity,
+//                             roughness : parameters.roughness,
+//                             metalness: parameters.metalness,
+//                             envMap     : textureCube_to_Reflect,
+//                             // side : THREE.BackSide, retifica render de objecto inverso en anillo.json
+//                             side : THREE.BackSide, // BackSide and DoubleSide
+//                             opacity : parameters.opacity,
+//                             shading : THREE.SmoothShading, // or THREE.FlatShanding
+//                             // transparent: true,
+//                      })
+//         var  silver_materials = new THREE.MeshStandardMaterial( {
+//                                         color : parameters.color,                           //as a defalult value
+//                                         emissive   : parameters.emissive,
+//                                         emissiveIntensity : parameters.emissiveIntensity,
+//                                         roughness : parameters.roughness,
+//                                         metalness: parameters.metalness,
+//                                         envMap     : textureCube_to_Reflect,
+//                                         shading : THREE.SmoothShading,
+//                                         side : THREE.DoubleSide,
+//                                     } );
+//         //load JSON object or scene
+//         var loader = new THREE.ObjectLoader();
+//         loader.load("{% static 'site/img/leopard_pulsera.json' %}",function ( object ) {
+//                     console.log (object); //only as a debug mode default
+
+//                     var leopardos = object.getObjectByName("leopardos");
+//                     var pulsera = object.getObjectByName("pulsera");
+//                     pulsera.material.metalness = 0.0;
+//                     pulsera.material.roughness = 1.0;
+//                     pulsera.material.shininess = 0.0;
+//                     console.log(leopardos);
+//                     console.log(pulsera);
+//                     leopardos.traverse(function(child) {     //change hole values for materials inside json  and set child.material
+//                         if (child instanceof THREE.Mesh) {
+//                             child.material = silver_materials;
+//                             child.geometry.computeVertexNormals();
+//                             child.scale.set(1,1,1).multiplyScalar(1/6);
+
+//                         }
+//                     });
+//                     // leopardos.scale.set(1,1,1).multiplyScalar(1/6);
+//                     markerObject3D.add(leopardos);
+//                     object.scale.set(1,1,1).multiplyScalar(1/6);
+//                     leopardos.rotation.y = Math.PI;
+//                     leopardos.rotation.x = 3*Math.PI/2;
+//                     object.rotation.y = 3*Math.PI/2;
+//                     object.rotation.z = Math.PI/2;
+//                     markerObject3D.add(object);
+
+//              		var gui = new dat.GUI({
+//                  	    autoPlace: false,
+//                         width: 300
+//                  	});
+
+//                     var customContainer = $('.moveGUI').append($(gui.domElement));
+//                 	gui.addFolder("about material");
+//                 		  gui.addColor(parameters, 'color').onChange(function(e) {
+//                             silver_materials.color = new THREE.Color(e);       // dinamic value
+//                         });
+//                         	gui.addColor(parameters, 'emissive').onChange(function(e){
+//                 			silver_materials.emissive = new THREE.Color(e);
+//                 		})
+//                 			gui.add(parameters,'opacity',0, 1).onChange(function(){
+//                 		    silver_materials.opacity =  parameters.opacity;
+//                 		})
+//                 		gui.add(parameters, 'emissiveIntensity',0,1).onChange(function(){
+//                 			silver_materials.emissiveIntensity = parameters.emissiveIntensity;
+//                 		})
+//                 		gui.add(parameters,'roughness',0,1).onChange(function(){
+//                 			silver_materials.roughness = parameters.roughness;
+//                 		})
+//                 		gui.add(parameters,'metalness',0,1).onChange(function(){
+//                 			silver_materials.metalness = parameters.metalness;
+//                 		})
+//                 		gui.add(parameters,'envMap',0,1).onChange(function(envmap){
+//                 			if ( envmap === true ) {
+//                     			silver_materials.envMap = parameters.envMap;
+
+//                     		} else {
+//                     			silver_materials.envMap = null;
+//                     		}
+//                 		})
+//                 		gui.add(parameters,'smooth',0,1).onChange(function(){
+//                 			silver_materials.smooth = parameters.smooth;
+//                 		})
+//                 	gui.open();
+//         	    } //end for function(object,materials)
+//         );
+
+//     })()
+
+
+// **********************************************************************************************************************************
+//                                  ObjectLoader JSON scene called pulsera_tejida
+// **********************************************************************************************************************************
+
+    //  ;(function(){
+    //         //  texture to env reflect
+    //         var path="{% static 'site/img/taxco' %}";
+    //         var extension='.jpg';
+    //         var urls=[
+    //             path + 'posx' + extension, path + 'negx' + extension,
+    //             path + 'posy' + extension, path + 'negy' + extension,
+    //             path + 'posz' + extension, path + 'negz' + extension,
+    //             ];
+    //         var textureCube_to_Reflect = THREE.ImageUtils.loadTextureCube (urls);
+    //         //default values for custom sterling silver material
+    //         var parameters = {
+    //                             color : 0x82dbff,       //set default value
+    //                     		opacity: 1.00,
+    //                     		emissive : 0Xbc1a1a,
+    //                     		emissiveIntensity : 0.08,
+    //                     		envMap : true,
+    //                     		roughness : 0.45,
+    //                     		metalness : 0.7,
+    //                     		smooth : true,
+    //                     	}
+    //         // var front_materials = new THREE.MeshStandardMaterial({
+    //         //                                 color : parameters.color,                           //as a defalult value
+    //         //                                 emissive   : parameters.emissive,
+    //         //                                 emissiveIntensity : parameters.emissiveIntensity,
+    //         //                                 roughness : parameters.roughness,
+    //         //                                 metalness: parameters.metalness,
+    //         //                                 envMap     : textureCube_to_Reflect,
+    //         //                                 // side : THREE.BackSide, retifica render de objecto inverso en anillo.json
+    //         //                                 side : THREE.FrontSide, // BackSide and DoubleSide
+    //         //                                 opacity : 0.5,
+    //         //                                 shading : THREE.SmoothShading, // or THREE.FlatShanding
+    //         //                                 transparent: true,
+    //         //             })
+    //         // var back_materials = new THREE.MeshStandardMaterial({
+    //         //                     color : parameters.color,                           //as a defalult value
+    //         //                     emissive   : parameters.emissive,
+    //         //                     emissiveIntensity : parameters.emissiveIntensity,
+    //         //                     roughness : parameters.roughness,
+    //         //                     metalness: parameters.metalness,
+    //         //                     envMap     : textureCube_to_Reflect,
+    //         //                     // side : THREE.BackSide, retifica render de objecto inverso en anillo.json
+    //         //                     side : THREE.BackSide, // BackSide and DoubleSide
+    //         //                     opacity : parameters.opacity,
+    //         //                     shading : THREE.SmoothShading, // or THREE.FlatShanding
+    //         //                     // transparent: true,
+    //         //              })
+    //         var  silver_materials = new THREE.MeshStandardMaterial( {
+    //                                         color : parameters.color,                           //as a defalult value
+    //                                         emissive   : parameters.emissive,
+    //                                         emissiveIntensity : parameters.emissiveIntensity,
+    //                                         roughness : parameters.roughness,
+    //                                         metalness: parameters.metalness,
+    //                                         envMap     : textureCube_to_Reflect,
+    //                                         shading : THREE.SmoothShading,
+    //                                         side : THREE.DoubleSide,
+    //                                     } );
+    //         //load JSON object or scene
+    //         var loader = new THREE.ObjectLoader();
+    //         loader.load("{% static 'site/img/pulsera_tejida.json' %}",function ( object ) {
+    //                     console.log (object); //only as a debug mode default
+
+    //                     var balls = object.getObjectByName("ball");
+    //                     var bracelet = object.getObjectByName("bracelet");
+
+    //                     console.log(object);
+    //                     console.log(balls);
+    //                     console.log(bracelet);
+
+    //                     bracelet.material.roughness = 0.0;
+    //                     bracelet.material.shininess = 512;
+    //                     bracelet.material.bumpScale = 4;
+    //                     bracelet.rotation.x = Math.PI;
+    //                     bracelet.rotation.y = Math.PI;
+    //                     bracelet.rotation.z = Math.PI/2;
+    //                     balls.rotation.x = Math.PI;
+    //                     balls.rotation.y = Math.PI;
+    //                     balls.rotation.z = Math.PI/2;
+
+    //                     balls.traverse(function(child) {     //change hole values for materials inside json  and set child.material
+    //                         if (child instanceof THREE.Mesh) {
+    //                             child.material = silver_materials;
+    //                             child.geometry.computeVertexNormals();
+    //                             // child.scale.set(1,1,1).multiplyScalar(1/6);
+
+    //                         }
+    //                     });
+    //                     // leopardos.scale.set(1,1,1).multiplyScalar(1/6);
+    //                     markerObject3D.add(balls);
+    //                     markerObject3D.add(bracelet);
+    //                     markerObject3D.add(object);
+
+    //                     // object.scale.set(1,1,1).multiplyScalar(1/6);
+
+    //                     // leopardos.rotation.y = Math.PI;
+    //                     // leopardos.rotation.x = 3*Math.PI/2;
+    //                     object.rotation.y = 3*Math.PI/2;
+    //                     object.rotation.z = Math.PI/2;
+    //                     // markerObject3D.add(object);
+
+    //              		var gui = new dat.GUI({
+    //                  	    autoPlace: false,
+    //                         width: 300
+    //                  	});
+
+    //                     var customContainer = $('.moveGUI').append($(gui.domElement));
+    //                 	gui.addFolder("about material");
+    //                 		  gui.addColor(parameters, 'color').onChange(function(e) {
+    //                             silver_materials.color = new THREE.Color(e);       // dinamic value
+    //                         });
+    //                         	gui.addColor(parameters, 'emissive').onChange(function(e){
+    //                 			silver_materials.emissive = new THREE.Color(e);
+    //                 		})
+    //                 			gui.add(parameters,'opacity',0, 1).onChange(function(){
+    //                 		    silver_materials.opacity =  parameters.opacity;
+    //                 		})
+    //                 		gui.add(parameters, 'emissiveIntensity',0,1).onChange(function(){
+    //                 			silver_materials.emissiveIntensity = parameters.emissiveIntensity;
+    //                 		})
+    //                 		gui.add(parameters,'roughness',0,1).onChange(function(){
+    //                 			silver_materials.roughness = parameters.roughness;
+    //                 		})
+    //                 		gui.add(parameters,'metalness',0,1).onChange(function(){
+    //                 			silver_materials.metalness = parameters.metalness;
+    //                 		})
+    //                 		gui.add(parameters,'envMap',0,1).onChange(function(envmap){
+    //                 			if ( envmap === true ) {
+    //                     			silver_materials.envMap = parameters.envMap;
+
+    //                     		} else {
+    //                     			silver_materials.envMap = null;
+    //                     		}
+    //                 		})
+    //                 		gui.add(parameters,'smooth',0,1).onChange(function(){
+    //                 			silver_materials.smooth = parameters.smooth;
+    //                 		})
+    //                 	gui.open();
+    //         	    } //end for function(object,materials)
+    //         );
+
+    //     })()
+
+// **********************************************************************************************************************************
+//                                  ObjectLoader JSON scene  gemstones amethyst ring  2-materials
+// **********************************************************************************************************************************
+    //   ;(function(){
+    //     //  texture to env reflect
+    //     var path="{% static 'site/img/taxco' %}";
+    //     var extension='.jpg';
+    //     var urls=[
+    //         path + 'posx' + extension, path + 'negx' + extension,
+    //         path + 'posy' + extension, path + 'negy' + extension,
+    //         path + 'posz' + extension, path + 'negz' + extension,
+    //         ];
+    //     var textureCube_to_Reflect = THREE.ImageUtils.loadTextureCube (urls);
+    //     //default values for custom sterling silver material
+    //     var parameters = {
+    //                         color : 0x522993,       //set default value
+    //                 		opacity: 1.00,          // ok
+    //                 		emissive : 0Xbc1a1a,     //
+    //                 		emissiveIntensity : 0.08,  //ok
+    //                 		envMap : true,           //
+    //                 		roughness : 0.45,         //
+    //                 		metalness : 0.7,           //
+    //                 		smooth : true,
+    //                 	}
+    //     var front_materials = new THREE.MeshStandardMaterial({
+    //                                     color : parameters.color,                           //as a defalult value
+    //                                     emissive   : parameters.emissive,
+    //                                     emissiveIntensity : parameters.emissiveIntensity,
+    //                                     roughness : parameters.roughness,
+    //                                     metalness: parameters.metalness,
+    //                                     // envMap     : textureCube_to_Reflect,
+    //                                     // side : THREE.BackSide, retifica render de objecto inverso en anillo.json
+    //                                     side : THREE.FrontSide, // BackSide and DoubleSide
+    //                                     opacity : 0.5,
+    //                                     shading : THREE.SmoothShading, // or THREE.FlatShanding
+    //                                     transparent: true,
+    //                 })
+    //     var back_materials = new THREE.MeshStandardMaterial({
+    //                         color : parameters.color,                           //as a defalult value
+    //                         emissive   : parameters.emissive,
+    //                         emissiveIntensity : parameters.emissiveIntensity,
+    //                         roughness : parameters.roughness,
+    //                         metalness: parameters.metalness,
+    //                         envMap     : textureCube_to_Reflect,
+    //                         // side : THREE.BackSide, retifica render de objecto inverso en anillo.json
+    //                         side : THREE.BackSide, // BackSide and DoubleSide
+    //                         opacity : parameters.opacity,
+    //                         shading : THREE.SmoothShading, // or THREE.FlatShanding
+    //                         // transparent: true,
+    //                  })
+    //     var  silver_materials = new THREE.MeshStandardMaterial( {
+    //                                     color : parameters.color,                           //as a defalult value
+    //                                     emissive   : parameters.emissive,
+    //                                     emissiveIntensity : parameters.emissiveIntensity,
+    //                                     roughness : parameters.roughness,
+    //                                     metalness: parameters.metalness,
+    //                                     envMap     : textureCube_to_Reflect,
+    //                                     shading : THREE.SmoothShading,
+    //                                     side : THREE.DoubleSide,
+    //                                 } );
+    //     //load JSON object or scene
+    //     var loader = new THREE.ObjectLoader();
+    //     loader.load("{% static 'site/img/anillo_diamond.json' %}",function ( object ) {
+    //                 console.log (object); //only as a debug mode default
+
+    //                 var gemstone = object.getObjectByName("diamon");
+    //                 gemstone.scale.set(1,1,1).multiplyScalar(1/2);
+    //                 var diamon_set = object.getObjectByName("diamon_set");
+    //                 diamon_set.scale.set(1,1,1).multiplyScalar(1/2);
+    //                 var ring = object.getObjectByName("ring")
+    //                 ring.scale.set(1,1,1).multiplyScalar(1/2);
+    //                 console.log(gemstone);
+    //                 object.scale.set(1,1,1).multiplyScalar(1/6);
+
+    //                 gemstone.traverse(function(child) {     //change hole values for materials inside json  and set child(object).material
+    //                     if (child instanceof THREE.Mesh) {
+    //                         child.material = back_materials;
+    //                         var second = child.clone();
+    //                         second.material = front_materials;
+    //                         var parent = new THREE.Group();
+    //                         parent.add(second);
+    //                         parent.add(child);
+    //                         markerObject3D.add(parent);
+    //                     }
+    //                 });
+
+    //                 diamon_set.traverse(function(child) {
+    //                     if (child instanceof THREE.Mesh) {
+    //                         child.material = back_materials;
+    //                         var second = child.clone();
+    //                         second.material = front_materials;
+    //                         var parent = new THREE.Group();
+    //                         parent.add(second);
+    //                         parent.add(child);
+    //                         markerObject3D.add(parent);
+    //                     }
+    //                 });
+    //                 ring.traverse(function(child) {     //change hole values for materials inside json  and set child.material
+    //                     if (child instanceof THREE.Mesh) {
+    //                         child.material = silver_materials;
+    //                         child.geometry.computeVertexNormals();
+    //                     }
+    //                 });
+    //                 markerObject3D.add(ring);
+
+    //          		var gui = new dat.GUI({
+    //              	    autoPlace: false,
+    //                     width: 300
+    //              	});
+
+    //                 var customContainer = $('.moveGUI').append($(gui.domElement));
+    //             	gui.addFolder("about material");
+    //             		  gui.addColor(parameters, 'color').onChange(function(e) {
+    //                         silver_materials.color = new THREE.Color(e);       // dinamic value
+    //                     });
+    //                     	gui.addColor(parameters, 'emissive').onChange(function(e){
+    //             			silver_materials.emissive = new THREE.Color(e);
+    //             		})
+    //             			gui.add(parameters,'opacity',0, 1).onChange(function(){
+    //             		    silver_materials.opacity =  parameters.opacity;
+    //             		})
+    //             		gui.add(parameters, 'emissiveIntensity',0,1).onChange(function(){
+    //             			silver_materials.emissiveIntensity = parameters.emissiveIntensity;
+    //             		})
+    //             		gui.add(parameters,'roughness',0,1).onChange(function(){
+    //             			silver_materials.roughness = parameters.roughness;
+    //             		})
+    //             		gui.add(parameters,'metalness',0,1).onChange(function(){
+    //             			silver_materials.metalness = parameters.metalness;
+    //             		})
+    //             		gui.add(parameters,'envMap',0,1).onChange(function(envmap){
+    //             			if ( envmap === true ) {
+    //                 			silver_materials.envMap = parameters.envMap;
+    //                 		} else {
+    //                 			silver_materials.envMap = null;
+    //                 		}
+    //             		})
+    //             		gui.add(parameters,'smooth',0,1).onChange(function(){
+    //             			silver_materials.smooth = parameters.smooth;
+    //             		})
+    //             	gui.open();
+
+    //     	    } //end for function(object,materials)
+    //     );
+    // })()
+
+
+
+// **********************************************************************************************************************************
+//                                  ObjectLoader JSON scene   ring  radial piston
+// **********************************************************************************************************************************
+      ;(function(){
+        //  texture to env reflect
+        var path="{% static 'site/img/taxco' %}";
+        var extension='.jpg';
+        var urls=[
+            path + 'posx' + extension, path + 'negx' + extension,
+            path + 'posy' + extension, path + 'negy' + extension,
+            path + 'posz' + extension, path + 'negz' + extension,
+            ];
+        var textureCube_to_Reflect = THREE.ImageUtils.loadTextureCube (urls);
+        //default values for custom sterling silver material
+        var parameters = {
+                            color : 0xefebf4,       //set default value
+                    		opacity: 1.00,          // ok
+                    		emissive : 0Xbc1a1a,     //
+                    		emissiveIntensity : 0.08,  //ok
+                    		envMap : true,           //
+                    		roughness : 0.45,         //
+                    		metalness : 0.7,           //
+                    		smooth : true,
+                    	}
+        var front_materials = new THREE.MeshStandardMaterial({
+                                        color : parameters.color,                           //as a defalult value
+                                        emissive   : parameters.emissive,
+                                        emissiveIntensity : parameters.emissiveIntensity,
+                                        roughness : parameters.roughness,
+                                        metalness: parameters.metalness,
+                                        // envMap     : textureCube_to_Reflect,
+                                        // side : THREE.BackSide, retifica render de objecto inverso en anillo.json
+                                        side : THREE.FrontSide, // BackSide and DoubleSide
+                                        opacity : 0.5,
+                                        shading : THREE.SmoothShading, // or THREE.FlatShanding
+                                        transparent: true,
+                    })
+        var back_materials = new THREE.MeshStandardMaterial({
+                            color : parameters.color,                           //as a defalult value
+                            emissive   : parameters.emissive,
+                            emissiveIntensity : parameters.emissiveIntensity,
+                            roughness : parameters.roughness,
+                            metalness: parameters.metalness,
+                            envMap     : textureCube_to_Reflect,
+                            // side : THREE.BackSide, retifica render de objecto inverso en anillo.json
+                            side : THREE.BackSide, // BackSide and DoubleSide
+                            opacity : parameters.opacity,
+                            shading : THREE.SmoothShading, // or THREE.FlatShanding
+                            // transparent: true,
+                     })
+        var  silver_materials = new THREE.MeshStandardMaterial( {
+                                        color : parameters.color,                           //as a defalult value
+                                        emissive   : parameters.emissive,
+                                        emissiveIntensity : parameters.emissiveIntensity,
+                                        roughness : parameters.roughness,
+                                        metalness: parameters.metalness,
+                                        envMap     : textureCube_to_Reflect,
+                                        shading : THREE.SmoothShading,
+                                        side : THREE.DoubleSide,
+                                    } );
+        //load JSON object or scene
+        var loader = new THREE.ObjectLoader();
+        loader.load("{% static 'site/img/ring_radial_piston.json' %}",function ( object ) {
+                    console.log (object); //only as a debug mode default
+
+                    var resina = object.getObjectByName("resina");
+                    resina.scale.set(1,1,1).multiplyScalar(1/3);
+                    resina.material.side = THREE.DoubleSide;
+                    var ring = object.getObjectByName("ring")
+                    ring.scale.set(1,1,1).multiplyScalar(1/3);
+                    console.log(resina);
+                    // resina.rotation.x = Math.PI/2;
+                    // resina.rotation.y = Math.PI;
+                    // resina.rotation.z = Math.PI/2;
+
+                    // resina.traverse(function(child) {     //change hole values for materials inside json  and set child(object).material
+                    //     if (child instanceof THREE.Mesh) {
+                    //         child.material = back_materials;
+                    //         var second = child.clone();
+                    //         second.material = front_materials;
+                    //         var parent = new THREE.Group();
+                    //         parent.add(second);
+                    //         parent.add(child);
+                    //         markerObject3D.add(parent);
+                    //     }
+                    // });
+
+                    ring.traverse(function(child) {     //change hole values for materials inside json  and set child.material
+                        if (child instanceof THREE.Mesh) {
+                            child.material = silver_materials;
+                            child.geometry.computeVertexNormals();
+                            // ring.rotation.x = Math.PI/2;
+                            // ring.rotation.y = Math.PI;
+                            // ring.rotation.z = Math.PI/2;
+                        }
+                    });
+                    markerObject3D.add(ring);
+                     markerObject3D.add(object);
+
+               		var gui = new dat.GUI({
+                 	    autoPlace: false,
+                        width: 300
+                 	});
+
+                    var customContainer = $('.moveGUI').append($(gui.domElement));
+                	   gui.addFolder("silver material");
+                		  gui.addColor(parameters, 'color').onChange(function(e) {
+                            silver_materials.color = new THREE.Color(e);       // dinamic value
+                        });
+                        	gui.addColor(parameters, 'emissive').onChange(function(e){
+                			silver_materials.emissive = new THREE.Color(e);
+                		})
+                			gui.add(parameters,'opacity',0, 1).onChange(function(){
+                		    silver_materials.opacity =  parameters.opacity;
+                		})
+                		gui.add(parameters, 'emissiveIntensity',0,1).onChange(function(){
+                			silver_materials.emissiveIntensity = parameters.emissiveIntensity;
+                		})
+                		gui.add(parameters,'roughness',0,1).onChange(function(){
+                			silver_materials.roughness = parameters.roughness;
+                		})
+                		gui.add(parameters,'metalness',0,1).onChange(function(){
+                			silver_materials.metalness = parameters.metalness;
+                		})
+                		gui.add(parameters,'envMap',0,1).onChange(function(envmap){
+                			if ( envmap === true ) {
+                    			silver_materials.envMap = parameters.envMap;
+                    		} else {
+                    			silver_materials.envMap = null;
+                    		}
+                		})
+                		gui.add(parameters,'smooth',0,1).onChange(function(){
+                			silver_materials.smooth = parameters.smooth;
+                		})
+                	gui.open();
+
+            		var gui = new dat.GUI({
+                     	    autoPlace: true,
+                            width: 300
+                         	});
+
+                    var customContainer = $('.moveGUI').append($(gui.domElement));
+                	gui.addFolder("resina material");
+                		  gui.addColor(parameters, 'color').onChange(function(e) {
+                            front_materials.color = new THREE.Color(e);       // dinamic value
+                        });
+                        	gui.addColor(parameters, 'emissive').onChange(function(e){
+                			front_materials.emissive = new THREE.Color(e);
+                		})
+                			gui.add(parameters,'opacity',0, 1).onChange(function(){
+                		    front_materials.opacity =  parameters.opacity;
+                		})
+                		gui.add(parameters, 'emissiveIntensity',0,1).onChange(function(){
+                			front_materials.emissiveIntensity = parameters.emissiveIntensity;
+                		})
+                		gui.add(parameters,'roughness',0,1).onChange(function(){
+                			front_materials.roughness = parameters.roughness;
+                		})
+                		gui.add(parameters,'metalness',0,1).onChange(function(){
+                			front_materials.metalness = parameters.metalness;
+                		})
+                		gui.add(parameters,'envMap',0,1).onChange(function(envmap){
+                			if ( envmap === true ) {
+                    			front_materials.envMap = parameters.envMap;
+                    		} else {
+                    			front_materials.envMap = null;
+                    		}
+                		})
+                		gui.add(parameters,'smooth',0,1).onChange(function(){
+                			front_materials.smooth = parameters.smooth;
+                		})
+                	gui.open();
+
+        	    } //end for function(object,materials)
+        );
+    })()
+
+// *************************************************************************************************************************************************
+//                                                      Simple JSONLoader  watch
+// *************************************************************************************************************************************************
+
+    // ;(function(){
+    //     var loader = new THREE.JSONLoader();
+
+    //     loader.load("{% static 'site/img/watch.json' %}",function ( geometry,materials ) {
+    //                 var material = new THREE.MultiMaterial(materials);
+    //                 geometry.computeVertexNormals();
+    //         		var object = new THREE.Mesh( geometry,material );
+    //         		console.log(object);
+    //         		object.scale.set(1,1,1).multiplyScalar(2/6)
+    //          		object.rotation.x = Math.PI/2
+    //         		markerObject3D.add( object );
+    //     	    }
+    //     );
+    // })()
+
+// *************************************************************************************************************************************************
+//                                                  ObjectLoader     tortuga json  (scene)
+// *************************************************************************************************************************************************
+
+    //     ;(function(){
+    //         var path="{% static 'site/img/taxco' %}";
+    //         var extension='.jpg';
+    //         var urls=[
+    //             path + 'posx' + extension, path + 'negx' + extension,
+    //             path + 'posy' + extension, path + 'negy' + extension,
+    //             path + 'posz' + extension, path + 'negz' + extension,
+    //             ];
+
+    //         var textureCube_to_Reflect = THREE.ImageUtils.loadTextureCube (urls);
+
+
+    //         // var smooth = THREE.SmoothShading;
+    //         // //  default array values for  gui element
+
+    //         var parameters = {
+    //                         color : 0x212121,       //set default value
+    //                 		opacity: 0.25,          // ok
+    //                 		emissive : 0XCCCCCC,     //
+    //                 		emissiveIntensity : 0.1,  //ok
+    //                 		envMap : true,           //
+    //                 		roughness : 0.2,         //
+    //                 		metalness : 0.1  ,           //
+    //                 		smooth : true,
+    //                 	}
+
+    //   // load a resource ; brazalete_inicial_e ,dije_mandalablend,,mandala_baking, embutido, BW_logo, cartier_esclava 1/4, jaguar, pulsera_bola
+    //   var loader = new THREE.ObjectLoader();
+    //     loader.load("{% static 'site/img/tortuga.json' %}",function ( object,materials ) {
+    //                 var  materials= new THREE.MeshStandardMaterial( {
+    //                                     color : parameters.color,                           //as a defalult value
+    //                                     emissive   : parameters.emissive,
+    //                                     emissiveIntensity : parameters.emissiveIntensity,
+    //                                     roughness : parameters.roughness,
+    //                                     metalness: parameters.metalness,
+    //                                     envMap     : textureCube_to_Reflect,
+    //                                     shading : THREE.SmoothShading,
+    //                                     side : THREE.DoubleSide,
+    //                                     // combine    : THREE.MixOperation                  //not supported in standard material
+    //                                 } );
+
+    //                 var tortuga = object.getObjectByName("tortuga");
+    //                 var chapa = object.getObjectByName("chapa");
+    //                 chapa.material.side = THREE.DoubleSide;
+    //                 chapa.material.roughness = 0.7;
+    //                 console.log(tortuga);
+    //                 console.log(chapa);
+
+    //                   tortuga.traverse(function (child) {
+    //                     if (child instanceof THREE.Mesh) {
+    //                         child.material = materials;
+    //                     }
+    //                 });
+
+    //                 var object3d = new THREE.Mesh( tortuga,materials );
+    //                 object3d.scale.set(1,1,1).multiplyScalar(4/1)
+    //           		object3d.rotation.x = Math.PI/2
+    //          		markerObject3D.add( tortuga );
+
+    //     //  loader.load("{% static 'site/img/mariposa1.json' %}",function ( geometry,materials ) {
+    //                 // var  material =materials[0]
+    //                 // var tortuga = object.getObjectByName("tortuga");
+    //                 console.log(object);
+    //                 // console.log(tortuga);
+
+    //         // 		var object3d = new THREE.Mesh( object,materials );
+    //         //  		object3d.scale.set(1,1,1).multiplyScalar(1/4)
+    //           		// object3d.rotation.x = Math.PI/2
+    //         		markerObject3D.add( object );
+
+
+
+    //      	var gui = new dat.GUI({
+    //      	    autoPlace: false,
+    //             width: 300
+    //      	});
+
+    //         var customContainer = $('.moveGUI').append($(gui.domElement));
+    //     	gui.addFolder("about material");
+    //     		  gui.addColor(parameters, 'color').onChange(function(e) {
+    //                 materials.color = new THREE.Color(e);       // dinamic value
+    //             });
+    //             	gui.addColor(parameters, 'emissive').onChange(function(e){
+    //     			materials.emissive = new THREE.Color(e);
+    //     		})
+    //     			gui.add(parameters,'opacity',0, 1).onChange(function(){
+    //     		    materials.opacity =  parameters.opacity;
+    //     		})
+    //     		gui.add(parameters, 'emissiveIntensity',0,1).onChange(function(){
+    //     			materials.emissiveIntensity = parameters.emissiveIntensity;
+    //     		})
+    //     		gui.add(parameters,'roughness',0,1).onChange(function(){
+    //     			materials.roughness = parameters.roughness;
+    //     		})
+    //     		gui.add(parameters,'metalness',0,1).onChange(function(){
+    //     			materials.metalness = parameters.metalness;
+    //     		})
+    //     		gui.add(parameters,'envMap',0,1).onChange(function(envmap){
+
+    //     			if ( envmap === true ) {
+
+    //         			materials.envMap = parameters.envMap;
+
+    //         		} else {
+
+    //         			materials.envMap = null;
+
+    //         		}
+    //     		})
+    //     // 		gui.add(parameters,'shading',0,1).onChange(function(){
+    //     // 			materials.smooth = parameters.smooth;
+    //     // 		})
+    //     	gui.open();
+
+
+    //     	    }
+    //     );
+
+
+    //     })()
+
+
+
+// // *************************************************************************************************************************************************
+// //                                                  ObjectLoader     mandala json  (scene)
+// // *************************************************************************************************************************************************
+
+//         ;(function(){
+//             var path="{% static 'site/img/taxco' %}";
+//             var extension='.jpg';
+//             var urls=[
+//                 path + 'posx' + extension, path + 'negx' + extension,
+//                 path + 'posy' + extension, path + 'negy' + extension,
+//                 path + 'posz' + extension, path + 'negz' + extension,
+//                 ];
+
+//             var textureCube_to_Reflect = THREE.ImageUtils.loadTextureCube (urls);
+
+
+//             // var smooth = THREE.SmoothShading;
+//             // //  default array values for  gui element
+
+//             var parameters = {
+//                             color : 0x212121,       //set default value
+//                     		opacity: 0.25,          // ok
+//                     		emissive : 0XCCCCCC,     //
+//                     		emissiveIntensity : 0.1,  //ok
+//                     		envMap : true,           //
+//                     		roughness : 0.2,         //
+//                     		metalness : 0.1  ,           //
+//                     		smooth : true,
+//                     	}
+
+//       // load a resource ; brazalete_inicial_e ,dije_mandalablend,,mandala_baking, embutido, BW_logo, cartier_esclava 1/4, jaguar, pulsera_bola
+//       var loader = new THREE.ObjectLoader();
+//         loader.load("{% static 'site/img/mandala_pendant.json' %}",function ( object,materials ) {
+//                     var  materials= new THREE.MeshStandardMaterial( {
+//                                         color : parameters.color,                           //as a defalult value
+//                                         emissive   : parameters.emissive,
+//                                         emissiveIntensity : parameters.emissiveIntensity,
+//                                         roughness : parameters.roughness,
+//                                         metalness: parameters.metalness,
+//                                         envMap     : textureCube_to_Reflect,
+//                                         shading : THREE.SmoothShading,
+//                                         side : THREE.DoubleSide,
+//                                         // combine    : THREE.MixOperation                  //not supported in standard material
+//                                     } );
+
+//                     var mandala = object.getObjectByName("mandala");
+//                     var chapa = object.getObjectByName("chapa");
+//                     var oxido = object. getObjectByName("oxido");
+//                     oxido.material.roughness = 0.9;
+//                     oxido.material.metalness = 0.0;
+//                     console.log(mandala);
+//                     console.log(chapa);
+
+//                       mandala.traverse(function (child) {
+//                         if (child instanceof THREE.Mesh) {
+//                             child.material = materials;
+//                         }
+//                     });
+
+//                     var object3d = new THREE.Mesh( mandala,materials );
+//                     object3d.scale.set(1,1,1).multiplyScalar(4/1)
+//               		object3d.rotation.x = Math.PI/2
+//              		markerObject3D.add( mandala );
+
+//         //  loader.load("{% static 'site/img/mariposa1.json' %}",function ( geometry,materials ) {
+//                     // var  material =materials[0]
+//                     // var tortuga = object.getObjectByName("tortuga");
+//                     console.log(object);
+//                     console.log(mandala);
+
+//             // 		var object3d = new THREE.Mesh( object,materials );
+//             //  		object3d.scale.set(1,1,1).multiplyScalar(1/4)
+//               		// object3d.rotation.x = Math.PI/2
+//             		markerObject3D.add( object );
+//             		markerObject3D.add( oxido );
+
+
+
+//          	var gui = new dat.GUI({
+//          	    autoPlace: false,
+//                 width: 300
+//          	});
+
+//             var customContainer = $('.moveGUI').append($(gui.domElement));
+//         	gui.addFolder("about material");
+//         		  gui.addColor(parameters, 'color').onChange(function(e) {
+//                     materials.color = new THREE.Color(e);       // dinamic value
+//                 });
+//                 	gui.addColor(parameters, 'emissive').onChange(function(e){
+//         			materials.emissive = new THREE.Color(e);
+//         		})
+//         			gui.add(parameters,'opacity',0, 1).onChange(function(){
+//         		    materials.opacity =  parameters.opacity;
+//         		})
+//         		gui.add(parameters, 'emissiveIntensity',0,1).onChange(function(){
+//         			materials.emissiveIntensity = parameters.emissiveIntensity;
+//         		})
+//         		gui.add(parameters,'roughness',0,1).onChange(function(){
+//         			materials.roughness = parameters.roughness;
+//         		})
+//         		gui.add(parameters,'metalness',0,1).onChange(function(){
+//         			materials.metalness = parameters.metalness;
+//         		})
+//         		gui.add(parameters,'envMap',0,1).onChange(function(envmap){
+
+//         			if ( envmap === true ) {
+
+//             			materials.envMap = parameters.envMap;
+
+//             		} else {
+
+//             			materials.envMap = null;
+
+//             		}
+//         		})
+//         // 		gui.add(parameters,'shading',0,1).onChange(function(){
+//         // 			materials.smooth = parameters.smooth;
+//         // 		})
+//         	gui.open();
+
+
+//         	    }
+//         );
+
+
+//         })()
+
+
+
+// *************************************************************************************************************************************************************
+//                                   JSONLoader Cartier esclava
+// *************************************************************************************************************************************************************
+    //     // texture to reflect over 3d models
+
+    //     ;(function(){
+    //         var path="{% static 'site/img/taxco' %}";
+    //         var extension='.jpg';
+    //         var urls=[
+    //             path + 'posx' + extension, path + 'negx' + extension,
+    //             path + 'posy' + extension, path + 'negy' + extension,
+    //             path + 'posz' + extension, path + 'negz' + extension,
+    //             ];
+
+    //         var textureCube_to_Reflect = THREE.ImageUtils.loadTextureCube (urls);
+
+
+    //         // var smooth = THREE.SmoothShading;
+    //         // //  default array values for  gui element
+
+    //         var parameters = {
+    //                         color : 0x212121,       //set default value
+    //                 		opacity: 0.25,          // ok
+    //                 		emissive : 0XCCCCCC,     //
+    //                 		emissiveIntensity : 0.1,  //ok
+    //                 		envMap : true,           //
+    //                 		roughness : 0.2,         //
+    //                 		metalness : 0.1  ,           //
+    //                 		smooth : true,
+    //                 	}
+
+    //   // load a resource ; brazalete_inicial_e ,dije_mandalablend,,mandala_baking, embutido, BW_logo, cartier_esclava 1/4, jaguar, pulsera_bola
+    //   var loader = new THREE.JSONLoader();
+    //     loader.load("{% static 'site/img/cartier_esclava.json' %}",function ( object,materials ) {
+    //                 var  materials= new THREE.MeshStandardMaterial( {
+    //                                     color : parameters.color,                           //as a defalult value
+    //                                     emissive   : parameters.emissive,
+    //                                     emissiveIntensity : parameters.emissiveIntensity,
+    //                                     roughness : parameters.roughness,
+    //                                     metalness: parameters.metalness,
+    //                                     envMap     : textureCube_to_Reflect,
+    //                                     shading : THREE.SmoothShading,
+    //                                     side : THREE.DoubleSide,
+    //                                     // combine    : THREE.MixOperation                  //not supported in standard material
+    //                                 } );
+
+    //                 // var tortuga = object.getObjectByName("tortuga");
+    //                 // var chapa = object.getObjectByName("chapa");
+    //                 // chapa.material.side = THREE.DoubleSide;
+    //                 // chapa.material.roughness = 0.7;
+    //                 // console.log(tortuga);
+    //                 // console.log(chapa);
+
+    //                 //   tortuga.traverse(function (child) {
+    //                 //     if (child instanceof THREE.Mesh) {
+    //                 //         child.material = materials;
+    //                 //     }
+    //                 // });
+
+    //                 var object3d = new THREE.Mesh( object,materials );
+    //                 object3d.scale.set(1,1,1).multiplyScalar(1/4)
+    //           		object3d.rotation.x = Math.PI/2
+    //          		markerObject3D.add( object3d );
+
+    //     //  loader.load("{% static 'site/img/mariposa1.json' %}",function ( geometry,materials ) {
+    //                 // var  material =materials[0]
+    //                 // var tortuga = object.getObjectByName("tortuga");
+    //                 console.log(object);
+    //                 // console.log(tortuga);
+
+    //         // 		var object3d = new THREE.Mesh( object,materials );
+    //         //  		object3d.scale.set(1,1,1).multiplyScalar(1/4)
+    //           		// object3d.rotation.x = Math.PI/2
+    //         		markerObject3D.add( object );
+
+
+
+    //      	var gui = new dat.GUI({
+    //      	    autoPlace: false,
+    //             width: 300
+    //      	});
+
+    //         var customContainer = $('.moveGUI').append($(gui.domElement));
+    //     	gui.addFolder("about material");
+    //     		  gui.addColor(parameters, 'color').onChange(function(e) {
+    //                 materials.color = new THREE.Color(e);       // dinamic value
+    //             });
+    //             	gui.addColor(parameters, 'emissive').onChange(function(e){
+    //     			materials.emissive = new THREE.Color(e);
+    //     		})
+    //     			gui.add(parameters,'opacity',0, 1).onChange(function(){
+    //     		    materials.opacity =  parameters.opacity;
+    //     		})
+    //     		gui.add(parameters, 'emissiveIntensity',0,1).onChange(function(){
+    //     			materials.emissiveIntensity = parameters.emissiveIntensity;
+    //     		})
+    //     		gui.add(parameters,'roughness',0,1).onChange(function(){
+    //     			materials.roughness = parameters.roughness;
+    //     		})
+    //     		gui.add(parameters,'metalness',0,1).onChange(function(){
+    //     			materials.metalness = parameters.metalness;
+    //     		})
+    //     		gui.add(parameters,'envMap',0,1).onChange(function(envmap){
+
+    //     			if ( envmap === true ) {
+
+    //         			materials.envMap = parameters.envMap;
+
+    //         		} else {
+
+    //         			materials.envMap = null;
+
+    //         		}
+    //     		})
+    //     // 		gui.add(parameters,'shading',0,1).onChange(function(){
+    //     // 			materials.smooth = parameters.smooth;
+    //     // 		})
+    //     	gui.open();
+
+
+    //     	    }
+    //     );
+
+
+    //     })()
+
+
+
+// ***********************************************************************************************************************************************************
+//                                          JSONLoader     simple anillo json
+// ***********************************************************************************************************************************************************
+    //     ;(function(){
+    //     var loader = new THREE.JSONLoader();
+    //     // load a resource ; brazalete_inicial_e ,dije_mandalablend, embutido, BW_logo, cartier_esclava 1/4, jaguar, pulsera_bola
+    //     loader.load("{% static 'site/img/watch.json' %}",function ( geometry,materials ) {
+    //                 // var  materials= new THREE.MeshPhongMaterial( {
+    //                 //                     color      : 0x212121, //color material
+    //                 //                     emissive   : 0xcccccc, //how much emisive (as white light) material is
+    //                 //                     emissiveIntensity : 0.1,
+    //                 //                     specular   : 0xebebeb, //
+    //                 //                     // ks: 0.8,
+    //                 //                     shininess  : 10,
+    //                 //                     envMap     : textureCube_to_Reflect,
+    //                 //                     combine    : THREE.MixOperation, // or THREE.AddOperation, THREE.MultiplyOperation
+    //                 //                     reflectivity : 0.3,
+    //                 //                     roughness : 0.1,
+    //                 //                     metal: true
+    //                 //                 } );
+    //     //  loader.load("{% static 'site/img/mariposa1.json' %}",function ( geometry,materials ) {
+    //                 // var  material =materials[0]
+    //         		var object3d = new THREE.Mesh( geometry,materials );
+    //          		object3d.scale.set(1,1,1).multiplyScalar(1/2)
+    //           		object3d.rotation.x = Math.PI/2
+    //         		markerObject3D.add( object3d );
+    //     	    }
+    //     );
+
+    // })()
+
+// ***********************************************************************************************************************************************************
+//                                                          load object from  OBJLoader/MTLLoader
+// ***********************************************************************************************************************************************************
+
+//     ;(function(){
+//         var loadOBJ = function() {
+//     var mtlLoader = new THREE.MTLLoader();
+// 				mtlLoader.load("{% static 'site/img/embutido.mtl' %}", function( materials ) {
+// 					materials.preload();
+// 					var objLoader = new THREE.OBJLoader();
+// 				// 	objLoader.setMaterials( materials );
+// 					objLoader.load("{% static 'site/img/embutido.obj' %}", function onLoad( mesh ) {
+// 						mesh.scale.set(1,1,1).multiplyScalar(1/2)
+//         		        mesh.rotation.x = Math.PI/2
+//         		      //  scene.add(mesh);
+//         		        markerObject3D.add( mesh );
+// 					} );
+// 				});
+//     };
+//     markerObject3D.add(loadOBJ())
+//     })()
+//     function textureNeedsPowerOfTwo( texture ) {
+//         if ( texture.wrapS !== THREE.ClampToEdgeWrapping || texture.wrapT !== THREE.ClampToEdgeWrapping ) return true;
+//         if ( texture.minFilter !== THREE.NearestFilter && texture.minFilter !== THREE.LinearFilter ) return true;
+//         return false;
+// }
+
+
+
+	//////////////////////////////////////////////////////////////////////////////////
+	//		render the whole thing on the page
+	//////////////////////////////////////////////////////////////////////////////////
+
+	// handle window resize
+	window.addEventListener('resize', function(){
+		renderer.setSize( window.innerWidth, window.innerHeight )
+		camera.aspect	= window.innerWidth / window.innerHeight
+		camera.updateProjectionMatrix()
+	}, false)
+
+
+	// render the scene
+	onRenderFcts.push(function(){
+ 		renderStats.begin();    // stats disabled
+		if( webglRenderEnabled === true ){
+			renderer.render( scene, camera );
+		}
+ 		renderStats.end();    // stats disabled
+	})
+
+	// run the rendering loop
+	var previousTime = performance.now()
+	requestAnimationFrame(function animate(now){
+
+		requestAnimationFrame( animate );
+
+
+
+		onRenderFcts.forEach(function(onRenderFct){
+			onRenderFct(now, now - previousTime)
+		})
+
+		previousTime	= now
+	})
+
+	//////////////////////////////////////////////////////////////////////////////////
+	//		Do the Augmented Reality part
+	//////////////////////////////////////////////////////////////////////////////////
+
+
+	// init the marker recognition
+	var jsArucoMarker	= new THREEx.JsArucoMarker()
+
+	// if no specific image source is specified, take the webcam by default
+	if( location.hash === '' )	location.hash = '#webcam'
+
+	// init the image source grabbing
+	if( location.hash === '#video' ){
+		var videoGrabbing = new THREEx.VideoGrabbing()
+		jsArucoMarker.videoScaleDown = 2
+	}else if( location.hash === '#webcam' ){
+		var videoGrabbing = new THREEx.WebcamGrabbing()
+		jsArucoMarker.videoScaleDown = 2
+	}else if( location.hash === '#image' ){
+		var videoGrabbing = new THREEx.ImageGrabbing()
+		jsArucoMarker.videoScaleDown = 10
+	}else console.assert(false)
+
+	// attach the videoGrabbing.domElement to the body
+        document.body.appendChild(videoGrabbing.domElement)
+
+	//////////////////////////////////////////////////////////////////////////////////
+	//		Process video source to find markers
+	//////////////////////////////////////////////////////////////////////////////////
+	// set the markerObject3D as visible
+	markerObject3D.visible	= false
+	// process the image source with the marker recognition
+	onRenderFcts.push(function(){
+		if( detectMarkersEnabled === false )	return
+
+		var domElement	= videoGrabbing.domElement
+ 		detectMarkersStats.begin();  // stats disabled
+		var markers	= jsArucoMarker.detectMarkers(domElement)
+ 		detectMarkersStats.end();  // stats disabled
+
+		if( markerToObject3DEnabled === false )	return
+		markerObject3D.visible = false
+
+		// see if this.markerId has been found
+		markers.forEach(function(marker){
+			// if( marker.id !== 265 )	return
+
+			jsArucoMarker.markerToObject3D(marker, markerObject3D)
+
+			markerObject3D.visible = true
+		})
+	})
+
+// document.getElementById("shot").addEventListener('click', takeScreenshot);
+
+// 	function takeScreenshot() {
+//     // open in new window like this
+//     var w = window.open('', '');
+//     w.document.title = "Screenshot";
+//     w.document.body.style.backgroundColor = "red";
+//     //w.document.body.style.backgroundColor = "red";
+//     var img = new Image();
+//     // Without 'preserveDrawingBuffer' set to true, we must render now
+//     renderer.render(scene, camera);
+//     img.src = renderer.domElement.toDataURL();
+//     w.document.body.appendChild(img);
+
+    // download file like this.
+    // var a = document.createElement('a');
+    // Without 'preserveDrawingBuffer' set to true, we must render now
+    // renderer.render(scene, camera);
+    // a.href = renderer.domElement.toDataURL().replace("image/png", "image/octet-stream");
+    // a.download = 'canvas.png'
+    // a.click();
+// }
+
+
+</script>
+<script>$('.container').empty();</script>
+<script>
+        $("#print").click(function() {
+                window.open( Render.domElement.toDataURL("image/png"), "Final");
+                return false;
+            });
+</script>
+
+
+
+{% endblock scripts %}
+
+
+
+
+

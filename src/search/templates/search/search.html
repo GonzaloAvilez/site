@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block title %}{% trans 'Search' %} {% endblock %}
+
+
+{% block container %}
+  <div class="page-header">
+    <h2>{% trans 'Search' %} </h2>
+  </div>
+
+  <div class="container" style="padding-top: 4em; padding-bottom: 18em;">
+    <div class="col-md-8 col-md-offset-2">
+      <h3></h3>
+      <form role="search" action="{% url 'search' %}" style="padding-top: 1em;">
+        <div class="input-group">
+          <input type="text" class="form-control  " name="q" placeholder="">
+          <span class="input-group-btn">
+            <button type="submit" class="btn btn-primary  "><span class="glyphicon glyphicon-search"></span></button>
+          </span>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock container %}
+

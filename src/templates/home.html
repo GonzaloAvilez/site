@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load thumbnail %}
+
+{% block title %}{{ block.super }}Mercado artesanal{% endblock %}
+{% block navbar-brand %}
+  <a class="navbar-brand page-scroll" href="#cover">
+    <img class="logo" src="{% static 'site/img/hand_logo.png' %}" alt="logo">{% include "_brandname.html" %}
+  </a>
+{% endblock %}
+
+{% block navbar-left %}
+  <li><a class="page-scroll" href="#presentation">{% trans 'What´s this?' %}</a></li>
+  <li><a class="page-scroll" href="#concepts">{% trans 'Handcrafted'%}</a></li>
+  <li><a class="page-scroll" href="#contact">{% trans 'Contact'%}</a></li>
+  <li><a class="page-scroll" href="#ar">{% trans 'AR'%}</a></li>
+  {% include "_navbar.html" with active_link="home" %}
+  <li><p class="text-center lead"><font color="white"> Sitio en construcción</font></p></li>
+{% endblock %}
+
+{% block navbar-right %}
+  {% if not user.is_authenticated %}
+  <a class="btn btn-default" href="{% url 'accounts:login' %}" role="button">{% trans 'Log In' %}</a>
+  <a class="btn btn-default" href="{% url 'accounts:signup' %}" role="button">{% trans 'Sign Up' %}</a>
+  {% else %}
+    {{ block.super }}
+  {% endif %}
+{% endblock %}
+
+{% block splash %}
+<section id="cover">
+  <div id="myCarousel" class="carousel fade-carousel slide"  data-ride="carousel" data-interval="5000" data-pause="click">
+        <ol class="carousel-indicators">
+          <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+          <li data-target="#myCarousel" data-slide-to="1"></li>
+          <li data-target="#myCarousel" data-slide-to="2"></li>
+        </ol>
+        <div class="carousel-inner">
+          <div class="item slides active">
+            <div class="slide-1" style="background-image: url({{ STATIC_URL }}{{"site/img/platos.jpg"}});">
+              <video loop="loop" preload="auto" poster="" autoplay class="video-playing"  style="min-height: 100%;" >
+                  <source src="{{ MEDIA_URL }}b.mp4" type="video/mp4" >
+                  <source src="{{ MEDIA_URL }}telar4.webm" type="video/ogv">
+              </video></div>
+              <div class="container-fluid">
+                <div class="carousel-caption carousel-description">
+                  <h1>{% trans 'Handmade'%}</h1>
+                  <p>{% trans 'Products by a handcrafted way'%}</p>
+                </div>
+              </div>
+              <div class="carousel-caption">
+                <a href="{% url 'shop:product_list' %}">
+                  <p><button class="btn btn-lg btn-default"> {% trans 'Gallery'%}!</button></p>
+                </a>
+              </div>
+          </div>
+          <div class="item slides">
+            <div class="slide-2"></div>
+              <div class="container">
+                <div class="carousel-caption carousel-description">
+                  <h1>{% trans 'Welcome craftsman' %}</h1>
+                  <p>{% trans 'Sign up to show your work' %}</p>
+                </div>
+              </div>
+              <div class="carousel-caption">
+                <a href="{% url 'accounts:signup' %}" role="button">
+                <p><button class="btn btn-lg btn-default"> Sign up!</button></p></a>
+              </div>
+          </div>
+          <div class="item slides">
+            <div class="slide-3"></div>
+              <div class="container">
+                <div class="carousel-caption carousel-description">
+                  <h1>{% trans 'Another written here' %}</h1>
+                  <p>{% trans 'The world hopes this website'%} </p>
+                </div>
+              <div class="carousel-caption">
+                <a href="/" role="button">
+                  <p><button class="btn btn-lg btn-default"> {% trans 'Another action!' %} </button></p>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+          <span class="sr-only">Previous</span>
+        </a>
+        <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+          <span class="sr-only">Next</span>
+        </a>
+  </div>
+</section>
+{% endblock splash %}
+
+{% block container %}
+<hr class="custom">
+
+<!--
+<form action="/i18n/setlang/" method="post">
+    {% csrf_token %}
+  <input name="next" type="hidden" value="{{request.path}}" />
+      <select name="language">
+          {% for lang in LANGUAGES %}
+          <option value="{{ lang.0 }}">{{ lang.1 }}</option>
+          {% endfor %}
+      </select>
+  <input type="submit" value="Go" />
+</form> -->
+<div id="search" class="container-fluid">
+  {% if not hide_search %}
+  <div class="col-lg-6 col-lg-offset-3 ">
+    <form class="" role="search" action="{% url 'search' %}">
+      <div class="input-group">
+      {% trans 'Find something special  and unique for you' as search %}
+        <input type="text" class="form-control" name="q" placeholder="{{ search }}" >
+        <span class="input-group-btn">
+          <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-search"></span></button>
+        </span>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+</div>
+
+<section id="presentation">
+    <div class="container img-presentation">
+      <div class="col-md-4 col-md-offset-4">
+        <img class="img-responsive"  alt="" src="{% static "/static/site/img/hand.png" %}" style="display: block; margin-left: auto; margin-right: auto;">
+        <h2 class="text-center article-title" style="font-size:300%;">{% trans 'Welcome' %}</h2>
+        <p class="text-center lead">{% trans 'Käay is a platform where you can find a community of mexican craftsmen,  Who show and share with us a bit of their work ... a bit of their life. '%}</p>
+
+      </div>
+    </div>
+</section>
+
+<div class="container-fluid"> <!-- principal -->
+<!--
+<hr class="custom"> -->
+
+<div class=" no-padding prlx prlx2">
+      <div class="img img2" ></div>
+</div>
+
+<section id="concepts" >
+ <div id="icons" class="img-concept">
+            <div class="container">
+                <div class="row ">
+                    <!-- Icons -->
+                    <div class="col-md-4 text-center animate fadeInRight">
+                       <img src="{% static 'site/img/foco_enciende.gif' %}" alt="logo">
+                        <h2 class="padding-top-10">Inspiration</h2>
+                        <p class="lead">{% trans 'Sudden stimulus  that makes someone want to do or create something' %}</p>
+                    </div>
+                    <div class="col-md-4 text-center animate fadeInLeft">
+                        <img src="{% static 'site/img/cerebro.gif' %}" alt="logo">
+                        <h2 class="padding-top-10">{% trans 'Innovation'%}</h2>
+                        <p class="lead"> {% trans 'New concepts for design and creation of artworks'%}</p>
+                    </div>
+                    <div class="col-md-4 text-center animate fadeIn">
+                        <img src="{% static 'site/img/lapiz_color.gif' %}" alt="logo">
+                        <h2 class="padding-top-10">{% trans 'Creativity'%}</h2>
+                        <p class="lead">{% trans  ' Tendency to generate or perceive new ideas  and concepts'%}</p>
+                    </div>
+                    <!-- End Icons -->
+                </div>
+            </div>
+        </div>
+</section>
+
+</div><!-- /.end  principal div_container-fluid -->
+
+<section id="ar">
+    <div class="container-fluid text-center">
+        <h2>Try Augmented Reality</h2>
+    </div>
+
+    <div id="band"class="justified-gallery inverse-frame" style="background-color: black">
+        <a href="" class="portfolio-box image-frame ">
+        <!--<img  src="{ thumbnail "home/plata.jpg" 350x350 crop }">-->
+        <img   src="{% static 'site/img/brazalete_ar.jpg' %}" alt="logo"></a>
+        <a class="portfolio-box image-frame ">
+        <img src="{% static 'site/img/pcb_ar.jpg' %}" alt="logo"></a>
+        <a class="portfolio-box image-frame ">
+        <img src="{% static 'site/img/trompo_ar.jpg' %}" alt="logo"></a>
+         <a class="portfolio-box image-frame ">
+        <img src="{% static 'site/img/zarape_ar.jpg' %}" alt="logo"></a>
+    </div>
+</section>
+<hr class="custom">
+
+
+<section id="contact">
+<div class="container-fluid">
+<!-- <div class="no-padding prlx prlx3"> -->
+ <!--  <div class="img img3" ></div> -->
+
+    <div class="col-md-10 col-md-offset-1 text-center">
+     <h1 class="contact-quotes">{% trans 'Feel Free to Contact us.'%} </h1>
+      <form role="form" action="" method="post">
+        {% csrf_token %}
+        {% crispy form %}
+      </form>
+      <!-- alternative button -->
+    <!--   <a class="btn btn-default"  href="javascript:$('form').submit()"   role="button">{% trans 'Send Message' %}</a> -->
+    </div>
+<!-- </div> -->
+</div>
+</section>
+
+
+
+{% endblock container %}
+
+{% block scripts %}
+
+
+<script src="{% static 'site/js/site.js' %}"></script>
+<!-- add scripts for animate scrolling -->
+<script src="{% static 'site/js/scrolling-nav.js' %}"></script>
+<script src="{% static 'site/js/jquery.easing.min.js' %}"></script>
+<script src="{% static 'site/js/parallax-background.js' %}"></script>
+<script src = "{%static 'site/js/jquery.justifiedGallery.js' %}"></script>
+<script>
+    $("#simple").justifiedGallery({
+    rowHeight : 250,
+    lastRow : 'justify',
+    margins : 5
+    });
+     $("#band").justifiedGallery({
+    rowHeight : 230,
+    lastRow : 'justify',
+    margins : 20,
+    });
+</script>
+<script>
+      $('.prlx').parallaxBackground({
+        'image': '.img'
+      });
+    </script><script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-36251023-1']);
+  _gaq.push(['_setDomainName', 'jqueryscript.net']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+{% endblock scripts %}
+

@@ -1,0 +1,7 @@
+{{ object.title }}
+{{ object.tags.all|join:", " }}
+{{ object.author }}
+{{ object.text }}
+
+
+
