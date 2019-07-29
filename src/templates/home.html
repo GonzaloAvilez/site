@@ -200,11 +200,53 @@
      <h1 class="contact-quotes">{% trans 'Feel Free to Contact us.'%} </h1>
       <form role="form" action="" method="post">
         {% csrf_token %}
-        {% crispy form %}
-      </form>
-      <!-- alternative button -->
-    <!--   <a class="btn btn-default"  href="javascript:$('form').submit()"   role="button">{% trans 'Send Message' %}</a> -->
+       
+    
+
+    <div class="form-row">
+      <div class="col-lg-6 form-group lead">
+        <!-- <div class="form-control input-contact input-lg"> -->
+          {{ form.subject|as_crispy_field }}
+        <!-- </div> -->
+        <!-- <div class="form-control input-contact input-lg"> -->
+          {{ form.contact_email|as_crispy_field }}
+        <!-- </div> -->
+        <!-- <div class="form-control input-contact input-lg "> -->
+          {{ form.contact_name|as_crispy_field }}
+        <!-- </div> -->
+      </div>
     </div>
+    
+    
+    <div class="form-row">
+      <div class="col-lg-6 form-group lead">
+        <div class="form-control input-contact input-lg">
+          {{ form.content|as_crispy_field }}
+        </div>
+        <div class="form-control col-md-2 mb-0">
+        </div>
+      </div>
+    </div>
+
+    <!-- <button type="submit" class="btn btn-primary">Sign in</button> -->
+      <!-- alternative button -->
+      <a class="btn btn-contact btn-default"  href="javascript:$('form').submit()"   role="button">{% trans 'Send Message' %}</a>
+      <input type="submit" name="submit" value="Send Message" class="btn btn-primary btn btn-contact btn-default" id="submit-id-submit">
+
+    </form>
+    </div>
+
+<!--     <div class="col-sm-6">
+                  {% if messages %}
+                      <ul class="messages" style="list-style-type:none; padding-left: 0px;">
+                        {%for message in messages %}
+                         <li {% if message.tags %} class="alert alert-{{message.tags}}" {% endif %}>
+                                {{message}}
+                        </li>
+                        {% endfor%}
+                      </ul>
+                  {% endif %}
+            </div> -->
 <!-- </div> -->
 </div>
 </section>

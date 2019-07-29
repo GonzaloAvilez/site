@@ -1,3 +1,4 @@
+# coding: utf-8
 from django.views import generic
 from django.shortcuts import render,render_to_response,redirect
 from .forms import ContactForm
@@ -6,6 +7,23 @@ from django.template.loader import get_template
 from django.core.mail import EmailMessage
 # Elasticsearch
 # from .forms import PostSearchForm
+from django.contrib import messages
+
+class HomePageView(generic.FormView):
+	template_name = "home.html"
+	form_class = ContactForm
+	success_url = 'home'
+
+	def get_context_data(self, **kwargs):
+		context = super(HomePageView, self).get_context_data(**kwargs)
+		return context
+
+	def form_valid(self, form):
+		form.save()
+		messages.success(self.request, "Envío Exitoso")
+		return super(ProspectView, self).form_valid(form)
+
+
 
 
 class HomePage(generic.TemplateView):
@@ -23,13 +41,16 @@ class HomePage(generic.TemplateView):
     def post(self,request,*args,**kwargs):
     	form_class = ContactForm
     	kwargs['form'] = form_class
+    	context = Context({})
     	if request.method == 'POST':
     		form = form_class(data=request.POST)
+    		print form['subject'].value()
 	    	if form.is_valid():
-	    		subject = request.POST.get('subject','')
-	    		contact_name = request.POST.get('contact_name','')
-	    		contact_email = request.POST.get('contact_email','')
-	    		content = request.POST.get('content','')
+	    		subject = request.POST.get('subject', None)
+	    		print subject
+	    		contact_name = request.POST.get('contact_name', None)
+	    		contact_email = request.POST.get('contact_email', None)
+	    		content = request.POST.get('content', None)
 	    		template = get_template('contact_template.txt')
 	    		context = Context({
 	    			'subject':subject,
@@ -46,6 +67,9 @@ class HomePage(generic.TemplateView):
 	    			headers = {'Reply to':contact_email})
 	    		email.send()
 	    		# return redirect('get')
+	    	else:
+	    		context['form_errors'] = form.errors
+	    		print context['form_errors']
     	return super(HomePage,self).get(request,*args,**kwargs)
 
 
