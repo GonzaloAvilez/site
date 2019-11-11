@@ -9,76 +9,80 @@ from django.core.mail import EmailMessage
 # from .forms import PostSearchForm
 from django.contrib import messages
 
+
 class HomePageView(generic.FormView):
-	template_name = "home.html"
-	form_class = ContactForm
-	success_url = 'home'
+    template_name = "home.html"
+    form_class = ContactForm
+    success_url = 'home'
 
-	def get_context_data(self, **kwargs):
-		context = super(HomePageView, self).get_context_data(**kwargs)
-		return context
+    def get_context_data(self, **kwargs):
+        context = super(HomePageView, self).get_context_data(**kwargs)
+        return context
 
-	def form_valid(self, form):
-		form.save()
-		messages.success(self.request, "Envío Exitoso")
-		return super(ProspectView, self).form_valid(form)
+    def form_valid(self, form):
+        form.save()
+        messages.success(self.request, "Envío Exitoso")
+        return super(ProspectView, self).form_valid(form)
 
 
 
 
 class HomePage(generic.TemplateView):
+    '''
+        Deprecated View sipplied by => HomePageView
+    '''
     template_name = "home.html"
     http_method_names = ['get', 'post']
 
 
     def get(self,request,*args,**kwargs):
-    	form_class = ContactForm
+        form_class = ContactForm
 
 
-    	kwargs['form'] = form_class
-    	return super(HomePage,self).get(request,*args,**kwargs)
+        kwargs['form'] = form_class
+        return super(HomePage,self).get(request,*args,**kwargs)
 
     def post(self,request,*args,**kwargs):
-    	form_class = ContactForm
-    	kwargs['form'] = form_class
-    	context = Context({})
-    	if request.method == 'POST':
-    		form = form_class(data=request.POST)
-    		print form['subject'].value()
-	    	if form.is_valid():
-	    		subject = request.POST.get('subject', None)
-	    		print subject
-	    		contact_name = request.POST.get('contact_name', None)
-	    		contact_email = request.POST.get('contact_email', None)
-	    		content = request.POST.get('content', None)
-	    		template = get_template('contact_template.txt')
-	    		context = Context({
-	    			'subject':subject,
-	    			'contact_name':contact_name,
-	    			'contact_email':contact_email,
-	    			'content':content,
-	    			})
-	    		content = template.render(context)
-	    		email = EmailMessage(
-	    			"New contact form submission",
-	    			content,
-	    			"from@example.com"+'',
-	    			['g_avilez@ikaay.com.mx'],
-	    			headers = {'Reply to':contact_email})
-	    		email.send()
-	    		# return redirect('get')
-	    	else:
-	    		context['form_errors'] = form.errors
-	    		print context['form_errors']
-    	return super(HomePage,self).get(request,*args,**kwargs)
+        form_class = ContactForm
+        kwargs['form'] = form_class
+        context = Context({})
+        if request.method == 'POST':
+            form = form_class(data=request.POST)
+            print form['subject'].value()
+            if form.is_valid():
+                subject = request.POST.get('subject', None)
+                print subject
+                contact_name = request.POST.get('contact_name', None)
+                contact_email = request.POST.get('contact_email', None)
+                content = request.POST.get('content', None)
+                template = get_template('contact_template.txt')
+                context = Context({
+                    'subject':subject,
+                    'contact_name':contact_name,
+                    'contact_email':contact_email,
+                    'content':content,
+                    })
+                content = template.render(context)
+                email = EmailMessage(
+                    "New contact form submission",
+                    content,
+                    "from@example.com"+'',
+                    ['g_avilez@ikaay.com.mx'],
+                    headers = {'Reply to':contact_email})
+                email.send()
+                # return redirect('get')
+            else:
+                context['form_errors'] = form.errors
+                print context['form_errors']
+        return super(HomePage,self).get(request,*args,**kwargs)
 
 
 class AboutPage(generic.TemplateView):
     template_name = "about.html"
 
 def contact(request):
-	form_class= ContactForm
-	return render(request,"contact.html",{'form':form_class},)
+    form_class= ContactForm
+    return render(request,"contact.html",{'form':form_class},)
 
 class three(generic.TemplateView):
     template_name = "three.html"

@@ -195,44 +195,73 @@
 <div class="container-fluid">
 <!-- <div class="no-padding prlx prlx3"> -->
  <!--  <div class="img img3" ></div> -->
-
-    <div class="col-md-10 col-md-offset-1 text-center">
-     <h1 class="contact-quotes">{% trans 'Feel Free to Contact us.'%} </h1>
-      <form role="form" action="" method="post">
+  <div class="row">
+    <div class="col-md-10 col-md-offset-1">
+      <h1 class="contact-quotes text-center">
+        {% trans 'Feel Free to Contact us.'%} 
+      </h1>
+      <form id="contact-form" role="form" action="" method="post">
         {% csrf_token %}
-       
     
+        
+        <div class="row">
 
-    <div class="form-row">
-      <div class="col-lg-6 form-group lead">
-        <!-- <div class="form-control input-contact input-lg"> -->
-          {{ form.subject|as_crispy_field }}
-        <!-- </div> -->
-        <!-- <div class="form-control input-contact input-lg"> -->
-          {{ form.contact_email|as_crispy_field }}
-        <!-- </div> -->
-        <!-- <div class="form-control input-contact input-lg "> -->
-          {{ form.contact_name|as_crispy_field }}
-        <!-- </div> -->
-      </div>
-    </div>
-    
-    
-    <div class="form-row">
-      <div class="col-lg-6 form-group lead">
-        <!-- <div class="form-control input-contact input-lg"> -->
-          {{ form.content|as_crispy_field }}
-        <!-- </div> -->
-      </div>
-    </div>
+          <div class="col-lg-6">
+            <div class="form-group lead {{form.subject.name}}">
+              {{form.subject}}
+              <label class="form-control-placeholder">
+                {{form.subject.label}}
+              </label>
+              <div class="{% if form.subject.errors%}error{%endif%}">    {{form.subject.errors}}
+              </div>
+            </div>
+
+            <div class="form-group lead {{form.name.name}}">
+              {{form.name}}
+              <label class="form-control-placeholder">
+                {{form.name.label}}
+              </label>
+              <div class="{% if form.name.errors%}error{%endif%}">    {{form.name.errors}}
+              </div>
+              
+            </div>
+
+            <div class="form-group lead {{form.email.name}}">
+              {{form.email}}
+              <label class="form-control-placeholder">
+                {{form.email.label}}
+              </label>
+              <div class="{% if form.email.errors%}error{%endif%}">    {{form.email.errors}}
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+
+            <div class="form-group lead {{form.content.name}}">
+              {{form.content}}
+              <label class="form-control-placeholder">
+                {{form.content.label}}
+              </label>
+              <div class="{% if form.content.errors%}error{%endif%}">    {{form.content.errors}}
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="row text-center">
+          <input type="submit" name="submit" value="Send Message" class="btn btn-primary btn btn-contact btn-default" id="submit-id-submit">
+        </div>
 
     <!-- <button type="submit" class="btn btn-primary">Sign in</button> -->
       <!-- alternative button -->
-      <a class="btn btn-contact btn-default"  href="javascript:$('form').submit()"   role="button">{% trans 'Send Message' %}</a>
-      <input type="submit" name="submit" value="Send Message" class="btn btn-primary btn btn-contact btn-default" id="submit-id-submit">
+<!--       <a class="btn btn-contact btn-default"  href="javascript:$('form').submit()"   role="button">{% trans 'Send Message' %}</a> -->
+      
 
     </form>
     </div>
+
+  </div>
 
 <!--     <div class="col-sm-6">
                   {% if messages %}
@@ -291,6 +320,19 @@
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
   })();
 
+</script>
+<script type="text/javascript">
+  var form = document.getElementById("contact-form");
+  form.placeholder = "placeholder";
+  console.log(form.placeholder);
+  form.addEventListener("focus", function(event) {
+    event.target.classList.add("show-placeholder");
+    event.target.classList.remove("hide-placeholder");
+    even.target.remove("input_errors");
+  }, true);
+  form.addEventListener("blur", function(event) {
+    event.target.classList.add("hide-placeholder");
+  }, true);
 </script>
 {% endblock scripts %}
 
