@@ -1,11 +1,11 @@
 @import "//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css";
-  
+
 html, body{
     height:0%;		/* For full height images */
 
-} 
+}
 
-h1,h3,h5{ 
+h1,h3,h5{
     font-family: 'Lobster', sans-serif; font-weight:normal;
     color:white;
 }
@@ -14,13 +14,13 @@ h2,h4,h6{
      color: black;
 }
 
- body{ 
-/*  background: url("/static/site/img/mexican_colors.jpg") no-repeat center center fixed; 
+ body{
+/*  background: url("/static/site/img/mexican_colors.jpg") no-repeat center center fixed;
 */  -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
   background-size: cover;
-  background-color: rgba(255, 255, 255, 0.25); 
+  background-color: rgba(255, 255, 255, 0.25);
 }
 
 .starter-template {
@@ -39,7 +39,7 @@ h2,h4,h6{
     margin-top: 55px;
     margin-bottom: 0;
 }
-  
+
 hr.custom {
   border-top: 1% solid #8c8b8b;
   text-align: center;
@@ -57,7 +57,7 @@ hr.custom:after {
   -webkit-transform: rotate(0deg);
   -moz-transform: rotate(0deg);
   transform: rotate(0deg);
-}     
+}
 
 hr.basic-custom {
   border-top: 1px solid #8c8b8b;
@@ -75,13 +75,13 @@ hr.basic-custom:after {
   -webkit-transform: rotate(0deg);
   -moz-transform: rotate(0deg);
   transform: rotate(0deg);
-} 
+}
 
 /*********************************************/
 /*          customize for navbar             */
 /*********************************************/
 
-body>.navbar-transparent {   
+body>.navbar-transparent {
     background-color: black;
     border-color: transparent;
     box-shadow: none;
@@ -108,7 +108,7 @@ body>.navbar-transparent {
 
 .navbar-nav > li > a {
     font-size: 20px;
-    font-family:Lobster;   
+    font-family:Lobster;
 }
 .navbar-default .navbar-brand {
   color:white;
@@ -150,7 +150,7 @@ body>.navbar-transparent {
 
 }
 .aux-dropdown{
-  min-width: 180px; 
+  min-width: 180px;
 }
 /*********************************************/
 /*     custom button_default bootstrap       */
@@ -176,7 +176,7 @@ body>.navbar-transparent {
 .btn-default {
     color: #fff;
     font-weight: normal;
-    background-color: transparent; 
+    background-color: transparent;
     border: 2px solid #fff;
   }
 
@@ -193,8 +193,8 @@ body>.navbar-transparent {
 }
 /*button on clic*/
 .btn-default:active:focus {
-  color: #ffffff; 
-  background-color: transparent; 
+  color: #ffffff;
+  background-color: transparent;
   border-color: #494F57;
 }
 
@@ -322,7 +322,7 @@ body>.navbar-transparent {
 
 
 /********************************/
-/*          Hero Headers  SE NECESITA????      */ 
+/*          Hero Headers  SE NECESITA????      */
 /********************************/
 
 .hero {
@@ -341,7 +341,7 @@ body>.navbar-transparent {
               transform: translate3d(-50%,-50%,0);
 }
 .hero h1 {
-    font-size: 6em;    
+    font-size: 6em;
     font-weight: bold;
     margin: 0;
     padding: 0;
@@ -350,18 +350,18 @@ body>.navbar-transparent {
 .fade-carousel .carousel-inner .item .hero  {
     opacity: 0;
     -webkit-transition: 3s all ease-in-out .5s;
-       -moz-transition: 3s all ease-in-out .5s; 
-        -ms-transition: 3s all ease-in-out .5s; 
-         -o-transition: 3s all ease-in-out .5s; 
-            transition: 3s all ease-in-out .5s; 
+       -moz-transition: 3s all ease-in-out .5s;
+        -ms-transition: 3s all ease-in-out .5s;
+         -o-transition: 3s all ease-in-out .5s;
+            transition: 3s all ease-in-out .5s;
 }
 .fade-carousel .carousel-inner .item.active .hero {
     opacity: 1;
     -webkit-transition: 3s all ease-in-out .5s;
-       -moz-transition: 3s all ease-in-out .5s; 
-        -ms-transition: 3s all ease-in-out .5s; 
-         -o-transition: 3s all ease-in-out .5s; 
-            transition: 3s all ease-in-out .5s;    
+       -moz-transition: 3s all ease-in-out .5s;
+        -ms-transition: 3s all ease-in-out .5s;
+         -o-transition: 3s all ease-in-out .5s;
+            transition: 3s all ease-in-out .5s;
 }
 
 /********************************/
@@ -377,7 +377,7 @@ body>.navbar-transparent {
 /********************************/
 /*       Slides backgrounds     */
 /********************************/
-.fade-carousel .slides .slide-1, 
+.fade-carousel .slides .slide-1,
 .fade-carousel .slides .slide-2,
 .fade-carousel .slides .slide-3 {
   height: 100vh;
@@ -387,7 +387,7 @@ body>.navbar-transparent {
 }
 .fade-carousel .slides .slide-1 {
 }
-.fade-carousel .slides .slide-2 {        
+.fade-carousel .slides .slide-2 {
   background-image: url("/static/site/img/bordando.jpg");
 }
 .fade-carousel .slides .slide-3 {
@@ -399,10 +399,10 @@ body>.navbar-transparent {
 /*          Media Queries       */
 /********************************/
 @media screen and (min-width: 980px){
-    .hero { width: 980px; }    
+    .hero { width: 980px; }
 }
 @media screen and (max-width: 640px){
-    .hero h1 { font-size: 4em; }    
+    .hero h1 { font-size: 4em; }
 
 }
 
@@ -421,14 +421,14 @@ body>.navbar-transparent {
 }
 
 .carousel-description{
-  padding-bottom: 80px;  
+  padding-bottom: 80px;
 }
 
 .carousel .item {
   /*height: 100vw;*/
   background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9));
       z-index: 1;
-      
+
 }
 .carousel-inner > .item > img {
   position: absolute;
@@ -507,14 +507,14 @@ transform: translate3d(0, 0, 0);
 .video-playing {
   position: absolute;
   /*top:-50px;*/
-  left:0; 
-  right:0;  
+  left:0;
+  right:0;
   bottom: none;
   height: auto;
   z-index: 10;
   min-height: 100%;
   min-width: 100%;
-  
+
 }
 
 video[poster] {
@@ -523,7 +523,7 @@ video[poster] {
   background-position: center center;
 
 }
-.overlay { 
+.overlay {
   color:white;
   position:absolute;
   z-index:12;
@@ -558,7 +558,7 @@ bottom: -200px;
 
 
 .parallax-bg1 {
-  background: linear-gradient(rgba(0, 0, 0, 0.9), 
+  background: linear-gradient(rgba(0, 0, 0, 0.9),
                               rgba(0, 0, 0, 0.02),
                               rgba(0, 0, 0, 0.02),
                               rgba(0, 0, 0, 0.02)),
@@ -612,7 +612,7 @@ a.button.light {
 table {
     width:100%;
     border-spacing:0;
-    border-collapse: collapse; 
+    border-collapse: collapse;
 }
 
 table th, table td {
@@ -690,7 +690,7 @@ ul.errorlist {
    color:#EC9C4C;
    clear:both;
    font-size:13px;
-   margin:0; 
+   margin:0;
    padding:10px;
 }
 
@@ -758,7 +758,7 @@ ul.errorlist {
 #main {
     float:left;
     width: 96%;
-    margin-right:-220px; 
+    margin-right:-220px;
     overflow:hidden;
 }
 
@@ -985,7 +985,7 @@ ul.errorlist {
 
   .portfolio-box .portfolio-box-caption .portfolio-box-caption-content .project-name {
       font-size: 22px;
-  } 
+  }
 }
 ::selection {
     text-shadow: none;
@@ -1001,7 +1001,7 @@ ul.errorlist {
   padding-top: 100px;
   padding-bottom: 150px;
   background-color:rgba(193, 66, 66, 0.07);
-  margin-left:-15px; 
+  margin-left:-15px;
   margin-right:-15px;
 }
 .timeline{
@@ -1158,7 +1158,7 @@ ul.errorlist {
   .timeline>li.timeline-inverted>.timeline-panel{
     padding:0 100px 20px 20px
   }
-} 
+}
 
 /*********************************************/
 /*              justified gallery            */
@@ -1512,7 +1512,7 @@ blockquote p {
     }*/
 
 /*.popover {
-  background-color: red; 
+  background-color: red;
   border-color: red;
 }*/
 /*.popover.right>.arrow:after {
@@ -1544,12 +1544,12 @@ blockquote p {
   height: 100vh;
   top: -40vh;
 /*   z-index: 1;
-*/} 
+*/}
 .img2, .img3{
   height: 100vh;
   top: -30vh;
 /*   z-index: 1;
-*/}  
+*/}
 
 .img2 {
     background-image: url("/static/site/img/carpintero.jpg") ;
@@ -1603,7 +1603,7 @@ blockquote p {
 a.button, input[type="submit"].btn-contact {
     background-color: transparent;
     border: 2px solid #fff;
-    
+
 }
 
 .contact-quotes{
@@ -1616,7 +1616,7 @@ padding-bottom: 40px;
 }*/
 
 .map_canvas { float: left; }
-    
+
 .order-form{
   margin-bottom: 10px;
 }
@@ -1627,3 +1627,10 @@ padding-bottom: 40px;
   margin: auto;
 }
 /**********order_PDF************/
+
+
+
+
+
+
+

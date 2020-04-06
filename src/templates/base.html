@@ -3,7 +3,7 @@
     {% load staticfiles %}
     {% load thumbnail %}
     {% load i18n %}
-
+    {% load compress%}
 
 <head>
     <meta charset="utf-8">
@@ -17,22 +17,21 @@
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
      <link rel="stylesheet" href="//code.jquery.com/ui/1.10.1/themes/base/jquery-ui.css">
     <!-- Custom styles for this site -->
-    {% block styles %}
-    <link href="{% static 'site/css/main.css' %}" rel="stylesheet">
-    {% endblock styles %}
+    {% compress css %}
+        <link href="{% static 'site/css/main.css' %}" rel="stylesheet">
+    {% endcompress %}
+{% block styles %}
+
+{% endblock styles %}
     <!-- Custom tags for the head tag -->
-    {% block extrahead %}{% endblock extrahead %}
+{% block extrahead %}{% endblock extrahead %}
     <link href='https://fonts.googleapis.com/css?family=Lobster' rel='stylesheet' type='text/css'>
 
 
 </head>
 
 <body>
-<!-- ======================================== -->
-<!--                  navbar                  -->
-<!--==========================================-->
-
-    {% block navbar %}
+{% block navbar %}
     <div class="navbar-transparent navbar-default   navbar-fixed-top " role="navigation" >
         <div class="navbar-header">
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -49,8 +48,7 @@
             {% endblock %}
           </a>
         </div>
-
-        {% block navbar-menu %}
+    {% block navbar-menu %}
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
             {% block navbar-left %}{% endblock %}
@@ -75,69 +73,58 @@
               {% endif %}
             {% endblock %}
           </ul>
-          </ul>
         </div><!--/.nav-collapse -->
-        {% endblock %}
+    {% endblock %}
     </div>
-    {% endblock navbar %}
-<!--=============== end navbar ===============-->
+{% endblock navbar %}
 
-    {% block messages %}
-      {% if messages %}
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags }}">  <!-- singular -->
-            <a class="close" data-dismiss="alert">×</a>
-            {{ message|safe }}
+{% block messages %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags }}">  <!-- singular -->
+                <a class="close" data-dismiss="alert">×</a>
+                {{ message|safe }}
+              </div>
+            {% endfor %}
+          {% endif %}
+{% endblock %}
+
+{% block splash %}
+{% endblock splash %}
+
+{% block container %}
+        <div class="container">
+
+          <div class="starter-template">
+            <h1>New Project</h1>
+            <p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a mostly barebones HTML document.</p>
           </div>
-        {% endfor %}
-      {% endif %}
-    {% endblock %}
 
-    {% block splash %}
-    {% endblock splash %}
-
-
-<!-- ======================================== -->
-<!--                  container               -->
-<!--==========================================-->
-
-    {% block container %}
-    <div class="container">
-
-      <div class="starter-template">
-        <h1>New Project</h1>
-        <p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a mostly barebones HTML document.</p>
-      </div>
-
-    </div><!-- /.container -->
-    {% endblock container %}
-
-<!-- ===========end container================= -->
-
-    <!-- Site footer -->
-    {% block footer %}
-      <!-- Some social button for contact will do -->
-      <a name="contact"></a>
-      <div class="container">
-            <div class="footer">
-        <div class="row">
-          <div class="col-lg-6">
-              <p>&copy; Käay {% now 'Y' %}</p>
-          </div>
-          <div class="col-lg-6 text-right">
-            <!-- Conéctate con nosotros -->
-            {% trans 'Comming soon '%}
-            <a href="#"><i class="fa fa-facebook-square"></i> </a>
-            <a href="#"><i class="fa fa-twitter"></i> </a>
-            <a href="#"><i class="fa fa-instagram"></i> </a>
-          </div>
-        </div>
+        </div><!-- /.container -->
+{% endblock container %}
+{% block footer %}
+          <a name="contact"></a>
+          <div class="container">
+                <div class="footer">
+            <div class="row">
+              <div class="col-lg-6">
+                  <p>&copy; Käay {% now 'Y' %}</p>
+              </div>
+              <div class="col-lg-6 text-right">
+                <!-- Conéctate con nosotros -->
+                <!--{% trans 'Comming soon '%}-->
+                <a href="#"><i class="fa fa-facebook-square"></i> </a>
+                <a href="#"><i class="fa fa-twitter"></i> </a>
+                <a href="#"><i class="fa fa-instagram"></i> </a>
+              </div>
             </div>
-      </div>
-    {% endblock %}
-
+                </div>
+          </div>
+{% endblock %}
+    {% compress js %}
     <script src="{% static 'site/js/jquery.js' %}"></script>
     <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    {% endcompress %}
     {% block scripts %}
     {% endblock scripts %}
   </body>

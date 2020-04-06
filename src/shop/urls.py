@@ -5,13 +5,18 @@ from django.conf.urls.static import static
 from .views import  ProductListView
 
 urlpatterns = [
- 
+
 	url(r'^productos/$', ProductListView.as_view(), name='product_list'),
 	url(r'^productos/(?P<slug>[-\w]+)/$',ProductListView.as_view(),name='product_list_by_category'),
 	url(r'^productos/(?P<id>\d+)/(?P<slug>[-\w]+)/$',views.product_detail,name='product_detail'),
 	url(r'^productos/(?P<id>\d+)/(?P<slug>[-\w]+)/edit/$', views.product_edit, name='product_edit'),
 	url(r'^productos/(?P<id>\d+)/(?P<slug>[-\w]+)/remove/$',views.product_remove, name='product_remove'),
 	url(r'^ranking/$', views.product_ranking, name='create'),
+
+    #render 3d model for custom code for each model
+	url(r'^productos/render/(?P<id>\d+)/(?P<slug>[-\w]+)/$',views.Rendering3d.as_view(), name='product_rendering'),
+
+
 	# paginacion alternativa no definitiva
 	url(r'^auto/$', ProductListView.as_view()),
 

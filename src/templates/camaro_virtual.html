@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block title %}{{ block.super }}Virtual Reality{% endblock %}
+
+
+{% block navbar-left %}
+    <li>
+        <div class="select text-right">
+            <label for="videoSource">Cámara: </label>
+            <select id="videoSource"></select>
+        </div>
+    </li>
+
+{% endblock %}
+
+{% block styles %}
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+{% endblock styles %}
+
+{% block container %}
+<body>
+    <canvas id="renderCanvas"></canvas>
+ </body>
+{% endblock container %}
+
+
+
+
+{% block scripts%}
+
+<script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+<script src="{% static 'baby/babylon.js' %}"></script>
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+
+
+<script>
+    if (BABYLON.Engine.isSupported()) {
+        var canvas = document.getElementById("renderCanvas");
+        var engine = new BABYLON.Engine(canvas, true);
+
+        function MyLoadingScreen( /* variables needed, for example:*/ text) {
+          //init the loader
+          this.loadingUIText = text;
+        }
+        MyLoadingScreen.prototype.displayLoadingUI = function() {
+          alert(this.loadingUIText);
+        };
+        MyLoadingScreen.prototype.hideLoadingUI = function() {
+          alert("Model Loaded!");
+        };
+
+        var loadingScreen = new MyLoadingScreen("Loading model...!!");
+        engine.loadingScreen = loadingScreen;
+
+        // var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), engine);
+        // camera.attachControl(canvas, true);
+        // var camera = new BABYLON.DeviceOrientationCamera("DevOr_camera", new BABYLON.Vector3(0, 0, 0), engine);
+
+        // // This targets the camera to scene origin
+        // camera.setTarget(new BABYLON.Vector3(0, 0, 10));
+
+        // // This attaches the camera to the canvas
+        // camera.attachControl(canvas, true);
+
+
+
+
+        BABYLON.SceneLoader.Load("{% static 'site/img/piano/' %}", "piano.babylon", engine, function (newScene) {
+            // Wait for textures and shaders to be ready
+            newScene.executeWhenReady(function () {
+                // Attach camera to canvas inputs
+                // newScene.activeCamera.attachControl(canvas);
+                newScene.clearColor = new BABYLON.Color3(0, 0, 0);
+                // newScene.activeCamera.speed=0.05;
+
+                var light = new BABYLON.DirectionalLight("DirectionalLight", new BABYLON.Vector3(0, -30, 0), newScene);
+                console.log(light);
+                light.intensity = 1.5;
+                var light_he = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(-1, 1, 0), newScene);
+
+
+                var touchCamera = new BABYLON.VirtualJoysticksCamera("VJC", newScene.activeCamera.position, newScene);
+                touchCamera.rotation = newScene.activeCamera.rotation;
+                // touchCamera.checkCollisions = newScene.activeCamera.checkCollisions;
+                touchCamera.applyGravity = newScene.activeCamera.applyGravity;
+                // var touchCamera = new BABYLON.TouchCamera("touchCamera", newScene.activeCamera.position, newScene);
+                // // touchCamera.rotation = newScene.activeCamera.rotation;
+                console.log(touchCamera);
+                 newScene.activeCamera = touchCamera;
+                newScene.activeCamera.minZ = 0.001;
+                newScene.activeCamera.speed=0.5;
+                newScene.activeCamera.inertia=0.5;
+                 newScene.activeCamera.attachControl(canvas);
+
+
+                // Once the scene is loaded, just register a render loop to render it
+                engine.runRenderLoop(function() {
+                    newScene.render();
+                });
+            });
+        }, function (progress) {
+            // To do: give progress feedback to user
+        });
+    }
+
+</script>
+
+<script>
+    $('.container').empty();            //Hidde footer container from base.html in order to resize correctly Screens
+</script>
+
+{% endblock scripts%}
+
+
+

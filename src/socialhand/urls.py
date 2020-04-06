@@ -34,13 +34,24 @@ urlpatterns =  [
     url(r'^search/$', search_views.search, name='search'),
     url(r'^contact/$',views.contact, name='contact'),
     url(r'^api/',include('socialhand.api.urls',namespace='api')),
-    #testing opencv tools
+    #testing opencv tools into AR
     url(r'^face_detection/camera/$', ocv.camera),
     url(r'^silver_ar/$',views.three.as_view(), name='three'),
     url(r'^honeywell/$',views.Cascade.as_view(), name='cascade'),
     # testing object detect js
     url(r'^glasses/$',views.ben_frank.as_view(), name='ben_frank'),
     url(r'^g876_id0/$',views.ben_frank.as_view(), name='ben_frank'),
+
+    #testing 360 look around  virtual tour with three.js
+    url(r'^virtual/$', views.LookAround_360.as_view(), name = 'look_around' ),
+
+     #testing babylon.js
+    url(r'^virtual_test_kitchen/$', views.VirtualBabylon.as_view(), name = 'virtual_reality' ),
+    url(r'^ar_cr3/$', views.Cr3ationAR.as_view(), name = 'AR_creation' ),
+    url(r'^camaro/$', views.CamaroVirtual.as_view(), name = 'camaro' ),
+    url(r'^warehouse_test/$', views.Warehouse.as_view(), name = 'warehouse' ),
+
+
 ]
 
 # User-uploaded files like profile pics need to be served in development

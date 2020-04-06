@@ -1,0 +1,406 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load compress %}
+
+{% block title %}{{ block.super }}Virtual Reality{% endblock %}
+
+
+{% block styles %}
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            position: fixed;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            outline: 0;
+        }
+
+
+
+        .buttonControlPanel {
+            height: 3em;
+            width: 17em;
+            margin: 5px 0 5px 0;
+            line - height: 2.2em
+        }.smallButtonControlPanel {
+            height: 2.2em;
+            width: 17em;
+            margin: 2px 0 2px 0
+        }.smallButtonControlPanel.pushed {
+            border: 2px solid #00008b}.buttonImg{height:32px;width:32px;float:left}button{border:1px solid # 888;
+            background - color: #dedede;
+            color: #888}button:hover{background-color:# eee
+        }
+        button: active {
+            transform: scale(.98); -webkit-transform: scale(.98)
+        }
+        #cameraPanel {
+            position: absolute;
+            right: 0;
+            width: 17em;
+            top: 2em;
+            z-index: 20;
+            transition: transform.25s ease-in-out;
+            transform: translateX(17em); -webkit-transition: -webkit-transform.25s ease-in-out; -webkit-transform: translateX(17em)
+        }
+        .cameraTag {
+            position: absolute;
+            background-color: transparent;
+            height: 50px;
+            width: 50px;
+            top: 20px;
+            left: -50px;
+            border-top-left-radius: 10px 10px;
+            border-bottom-left-radius: 10px 10px;
+            z-index: 100
+        }
+        #clickableTag {
+            cursor: hand;
+            background - color: transparent
+        }
+        #cameraClickableTag {
+            cursor: hand;
+            background - color: transparent
+        }
+        #cameraControlsZone {
+            width: 100 % ;
+            height: 100 % ;
+            background - color: #eee;
+            color: #888;padding:20px;border-bottom-left-radius:10px 10px}.hidden{display:none}
+    </style>
+{% endblock styles %}
+
+{% block container %}
+<body>
+    <canvas id="renderCanvas"></canvas>
+       <div id="cameraPanel">
+        <div id="cameraControlsZone">
+            <p>
+                Controller:
+                <button class="buttonControlPanel" id="universalCamera">
+                    <img src="https://d33wubrfki0l68.cloudfront.net/dcd183b9dc6674b3acb29895c9be9c241e933435/21aa7/assets/camtouchoff.png" class="buttonImg" />PC
+                </button>
+
+                 <button class="buttonControlPanel" id="virtualJoysticksCamera">
+                    <img src="https://d33wubrfki0l68.cloudfront.net/91e4f8a450087a60aec5c3cc9bb8b3cbdb52d341/a5f13/assets/camvirtualjoy.png" class="buttonImg" />Joysticks touch
+                </button>
+
+                <button class="buttonControlPanel" id="deviceOrientationCamera">
+                    <img src="https://d33wubrfki0l68.cloudfront.net/b79ca59bdd1cb71dd762d9a703fd40cf1ab0cb2e/e70d2/assets/camdeviceoff.png" class="buttonImg" />VR Device
+                </button>
+            </p>
+
+        </div>
+        <div class="cameraTag"><img src="https://d33wubrfki0l68.cloudfront.net/4be4d643f634ae7cb26ddff105477a067c434512/11f81/assets/camera.png" /></div>
+        <div class="cameraTag" id="cameraClickableTag"></div>
+    </div>
+ </body>
+{% endblock container %}
+
+
+
+
+{% block scripts%}
+
+
+<script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+<!--<script src="{% static 'baby/babylon.js' %}"></script>-->
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+{% compress js %}
+
+<script>
+
+var cameraPanel = document.getElementById("cameraPanel");
+var universalCamera = document.getElementById("universalCamera");
+var virtualJoysticksCamera = document.getElementById("virtualJoysticksCamera");
+var deviceOrientationCamera = document.getElementById("deviceOrientationCamera");
+var camerasList = document.getElementById("camerasList");
+var scene;
+
+
+
+    if (BABYLON.Engine.isSupported()) {
+        var canvas = document.getElementById("renderCanvas");
+        var engine = new BABYLON.Engine(canvas, true);
+
+        function MyLoadingScreen( /* variables needed, for example:*/ text) {
+          //init the loader
+          this.loadingUIText = text;
+        }
+        MyLoadingScreen.prototype.displayLoadingUI = function() {
+          alert(this.loadingUIText);
+        };
+        MyLoadingScreen.prototype.hideLoadingUI = function() {
+          alert("Model Loaded!");
+        };
+
+        var loadingScreen = new MyLoadingScreen("Loading model...!!");
+        engine.loadingScreen = loadingScreen;
+
+        // var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), engine);
+        // camera.attachControl(canvas, true);
+        // var camera = new BABYLON.DeviceOrientationCamera("DevOr_camera", new BABYLON.Vector3(0, 0, 0), engine);
+
+        // // This targets the camera to scene origin
+        // camera.setTarget(new BABYLON.Vector3(0, 0, 10));
+
+        // // This attaches the camera to the canvas
+        // camera.attachControl(canvas, true);
+
+        // Resize window canvas for well responsiv remder
+        window.addEventListener("resize", function () {
+        engine.resize();
+        });
+
+        BABYLON.SceneLoader.Load("{% static 'site/img/Babylonjs/' %}", "kitchen.babylon", engine, function (newScene) {
+            scene = newScene;
+            console.log(newScene);
+            // Wait for textures and shaders to be ready
+            newScene.executeWhenReady(function () {
+                // Attach camera to canvas inputs
+                // newScene.activeCamera.attachControl(canvas);
+                newScene.clearColor = new BABYLON.Color3(0, 0, 0);
+                newScene.specularIntensity = 1;
+                // newScene.activeCamera.speed=0.05;
+
+                            //for Scene from unity who has one camera position
+                  // var touchCamera = new BABYLON.TouchCamera("touchCamera", newScene.activeCamera.position, newScene);
+                // touchCamera.rotation = newScene.activeCamera.rotation;
+
+                // *************************************Lights******************************************
+
+                var light = new BABYLON.DirectionalLight("DirectionalLight", new BABYLON.Vector3(0, -3, 0), newScene);
+                console.log(light);
+                light.intensity = 3;
+                light.diffuse = new BABYLON.Color3(1, 1, 1);
+
+                // *************************************Camera******************************************
+
+                var touchCamera = new BABYLON.VirtualJoysticksCamera("VJC",  new BABYLON.Vector3(0, 1, -15), newScene);
+                touchCamera.rotation = newScene.activeCamera.rotation;
+                //     // touchCamera.checkCollisions = newScene.activeCamera.checkCollisions;
+                // touchCamera.applyGravity = newScene.activeCamera.applyGravity;
+
+                console.log( newScene.activeCamera);
+                //  newScene.activeCamera = touchCamera;
+                newScene.activeCamera.minZ = 0.001;
+                newScene.activeCamera.speed=1;
+                // newScene.activeCamera.inertia=0.08;
+                 newScene.activeCamera.attachControl(canvas);
+
+
+
+
+                // ********************Custom material
+
+                var hdrTexture = BABYLON.CubeTexture.CreateFromPrefilteredData("{% static 'site/img/environment.dds' %}", scene);
+                // var metal = new BABYLON.PBRSpecularGlossinessMaterial("metal", scene);
+                var metal = new BABYLON.PBRMaterial("metal", scene);
+                    metal.reflectionTexture = hdrTexture;
+                    metal.microSurface = 0.86;
+                    metal.alpha =1;
+                    // metal.metallic = 0.9;
+                    metal.reflectivityColor = new BABYLON.Color3(0.85, 0.85, 0.85);
+                    // metal.albedoColor = new BABYLON.Color3(0.01, 0.01, 0.01);
+                    metal.environmentIntensity =0.5;
+                    metal.specularIntensity = 0.2;
+                    // mixin Texture with PBR material
+                    metal.albedoTexture = new BABYLON.Texture("{% static 'site/img/Babylonjs/TextureAtlas_kitchen_for_unity 1.png' %}", scene);
+
+                //*************************** Selection by individual Mesh
+                var fridge = newScene.getMeshByName("fridge");
+                fridge.material = metal;
+                fridge.material.roughness = 0.2;
+                console.log(fridge);
+
+                var table = newScene.getMeshByName("central_table");
+                table.material = metal;
+                table.material.alpha = 1;
+                // table.material.roughness = 2.3;
+                table.disableLighting = false;
+                console.log(table);
+
+                var microwave= newScene.getMeshByName("microwave");
+                microwave.material = metal;
+
+                // var buffet_front =  newScene.getMeshByName("buffet_front");
+                // buffet_front.material = metal;
+
+                var bar_front = newScene.getMeshByName("bar_front");
+                bar_front.material = metal;
+
+                var bar_lateral  = newScene.getMeshByName("bar_lateral");
+                bar_lateral.material = metal;
+
+                var wall = newScene.getMeshByName("wall");
+                wall.material =  metal;
+
+                var griffin = newScene.getMeshByName("griffin");
+                griffin.material =  metal;
+
+                var frame_window = newScene.getMeshByName("window");
+                frame_window.material = metal;
+
+                var ornament =  newScene.getMeshByName("ornament");
+                ornament.material = metal;
+
+                var extractor = newScene.getMeshByName ("extractor");
+                extractor.material = metal;
+                extractor.material.roughness = 0.2;
+
+                var cooker = newScene.getMeshByName("cooker");
+                cooker.material = metal;
+
+                var closet =newScene.getMeshByName("closet");
+                closet.material = metal;
+                closet.material.roughness = 0.2;
+
+                var sink =  newScene.getMeshByName("sink");
+                sink.material = metal;
+                // sink.material.roughness = 0.07;
+
+
+
+            var shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
+        	shadowGenerator.getShadowMap().renderList.push(floor);
+        	shadowGenerator.setDarkness(3.5);
+        	shadowGenerator.usePoissonSampling = true;
+
+        	var floor =  newScene.getMeshByName("floor");
+        	floor.receiveShadows = true;
+
+
+
+
+            // ******************** Skybox
+            var hdrSkybox = BABYLON.Mesh.CreateBox("hdrSkyBox", 1000.0, scene);
+            var hdrSkyboxMaterial = new BABYLON.PBRMaterial("skyBox", scene);
+            hdrSkyboxMaterial.backFaceCulling = false;
+            hdrSkyboxMaterial.reflectionTexture = hdrTexture.clone();
+            hdrSkyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+        	hdrSkyboxMaterial.microSurface = 1.0;
+            hdrSkyboxMaterial.disableLighting = true;
+            hdrSkybox.material = hdrSkyboxMaterial;
+            hdrSkybox.infiniteDistance = false;
+
+
+
+                // Once the scene is loaded, just register a render loop to render it
+                engine.runRenderLoop(function() {
+                    newScene.render();
+                });
+            });
+        }, function (progress) {
+            // To do: give progress feedback to user
+        });
+    }
+
+    //******************* UI experience
+    var cameraPanelIsClosed = true;
+    document.getElementById("cameraClickableTag").addEventListener("click", function () {
+        if (cameraPanelIsClosed) {
+            cameraPanelIsClosed = false;
+            cameraPanel.style.webkitTransform = "translateX(0px)";
+            cameraPanel.style.transform = "translateX(0px)";
+        } else {
+            hideCameraPanel();
+        }
+
+    });
+
+    var hideCameraPanel = function () {
+    cameraPanelIsClosed = true;
+    cameraPanel.style.webkitTransform = "translateX(17em)";
+    cameraPanel.style.transform = "translateX(17em)";
+    };
+
+    var switchCamera = function (camera) {
+        if (scene.activeCamera.rotation) {
+            camera.rotation = scene.activeCamera.rotation.clone();
+        }
+        camera.fov = scene.activeCamera.fov;
+        camera.minZ = scene.activeCamera.minZ;
+        camera.maxZ = scene.activeCamera.maxZ;
+
+        if (scene.activeCamera.ellipsoid) {
+            camera.ellipsoid = scene.activeCamera.ellipsoid.clone();
+        }
+        camera.checkCollisions = scene.activeCamera.checkCollisions;
+        camera.applyGravity = scene.activeCamera.applyGravity;
+
+        camera.speed = scene.activeCamera.speed;
+
+        camera.postProcesses = scene.activeCamera.postProcesses;
+        scene.activeCamera.postProcesses = [];
+        scene.activeCamera.detachControl(canvas);
+        if (scene.activeCamera.dispose) scene.activeCamera.dispose();
+
+        scene.activeCamera = camera;
+
+        scene.activeCamera.attachControl(canvas);
+
+        hideCameraPanel();
+    };
+
+    //************** Camera type selection
+    universalCamera.addEventListener("click", function () {
+        if (!scene) {return;}
+        if (scene.activeCamera instanceof BABYLON.TouchCamera) {return;}
+        var camera = new BABYLON.UniversalCamera("UniversalCamera", scene.activeCamera.position, scene);
+        switchCamera(camera);
+    });
+
+    virtualJoysticksCamera.addEventListener("click", function () {
+        if (!scene) { return;}
+        if (scene.activeCamera instanceof BABYLON.VirtualJoysticksCamera) {return;}
+        var camera = new BABYLON.VirtualJoysticksCamera("virtualJoysticksCamera", scene.activeCamera.position, scene);
+        switchCamera(camera);
+    });
+
+    deviceOrientationCamera.addEventListener("click", function () {
+        if (!scene) {return;}
+        if (scene.activeCamera instanceof BABYLON.VRDeviceOrientationFreeCamera) {return;}
+        var camera = new BABYLON.VRDeviceOrientationFreeCamera("deviceOrientationCamera", scene.activeCamera.position, scene);
+        switchCamera(camera);
+    });
+
+
+    //*********** Camera global selection unused
+    camerasList.addEventListener("change", function () {
+        if (scene) {
+            scene.activeCamera.detachControl(canvas);
+            scene.activeCamera = scene.cameras[camerasList.selectedIndex];
+            scene.activeCamera.inertia=0.03;
+            scene.activeCamera.attachControl(canvas);
+        }
+    });
+
+
+
+
+
+
+
+</script>
+
+<script>
+$( ".navbar-transparent" ).hide();
+    $('.container').empty();            //Hidde footer container from base.html in order to resize correctly Screens
+</script>
+
+
+
+{% endcompress %}
+
+
+{% endblock scripts%}
+
+
+

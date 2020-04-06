@@ -105,9 +105,21 @@ INSTALLED_APPS = (
     'socialhand',
     # 'haystack',
     # 'djrill',
+    'compressor',
 
 
 )
+
+    # 'haystack',
+COMPRESS_ENABLED = True
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'compressor.finders.CompressorFinder',
+)
+
+
+
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -190,14 +202,16 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/
-
+ROOT_URLCONF = 'socialhand.urls'
 
 STATIC_URL = "/static/"
 STATIC_ROOT = join(BASE_DIR, '/home/kaayi/kaay/socialhand/src/static')
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = join(BASE_DIR, 'media')
+COMPRESS_ROOT = STATIC_ROOT
 
+MEDIA_URL = "/media/"
+# MEDIA_ROOT = join(BASE_DIR, 'media')
+MEDIA_ROOT = join(BASE_DIR, '/home/kaayi/kaay/socialhand/src/media')
 
 
 ALLOWED_HOSTS = []

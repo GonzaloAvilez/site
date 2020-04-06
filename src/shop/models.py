@@ -8,7 +8,7 @@ class Category(models.Model):
 	name = models.CharField(max_length=200, db_index=True)
 	slug = models.SlugField(max_length=200, db_index=True, unique=True)
 
-	class Meta: 
+	class Meta:
 		ordering = ('name',)
 		verbose_name = ('category')
 		verbose_name_plural = ('categories')
@@ -49,3 +49,46 @@ class Product(models.Model):
                     this.image.delete()
             except: pass
             super(Product, self).save(*args, **kwargs)
+
+# function will be loaded only in Product3d class
+def get_upload_path(instance, filename):
+		""" apliying rsplit(condition,counter) :delete last elements from right to left
+		and getting element by indexing selection []>>left to right  from ({././.},{.json})"""
+		# Removing last slash from storage3d.URL: ("/media/models3d/<Date>","model_name.json")
+		path_instance = instance.storage3d.url.rsplit('/',1)[0]
+		""" apliying split(condition,counter) and removing firts elements from left to right
+		and getting element by indexing selection [-1]>>right to left from ({././},{models3d/<Date>})"""
+		# Removing first and second one slashes and getting last element
+		path_dirname = path_instance.split('/',2)[-1]
+		# join and build path to save model instance when function is loaded
+		return '/'.join ([path_dirname, filename])
+
+
+class Product3d(models.Model):
+    mesh_selection = models.ForeignKey(Product, related_name='mesh', null=True)
+    slug = models.CharField(max_length=200, db_index=True)
+    name = models.CharField(max_length=200, db_index=True)
+    storage3d = models.FileField(upload_to='models3d/%Y-%m-%d', null=True, blank=True)
+    texture3d = models.ImageField(upload_to=get_upload_path, null=True, blank=True)
+    custom_model_js = models.FileField(upload_to='models3d/each-js', null=True, blank=True)
+
+    def get_absolute_url(self):
+        return reverse('shop:product_rendering', args=[self.id, self.slug])
+
+    def __str__(self):
+        return self.name
+
+
+
+storage3d_upload_to = Product3d._meta.get_field('storage3d').upload_to
+class Textures3d(models.Model):
+    model3d = models.ForeignKey(Product3d)
+    texture_3d = models.ImageField(upload_to=storage3d_upload_to,null=True,blank=True)
+
+
+    def __str__(self):
+        return self.name
+
+
+
+

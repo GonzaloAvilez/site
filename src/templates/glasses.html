@@ -1,6 +1,7 @@
 
 {% extends 'base.html' %}
 {% load static%}
+{% load compress %}
 {% block title %}{{ block.super }}AR{% endblock %}
 
 
@@ -34,6 +35,7 @@
 
 
 {% block scripts%}
+{%  compress js %}
 <script src="{% static 'object-detect/compatibility.js'%}"></script>
 <script src="{% static 'object-detect/smoother.js' %}"></script>
 <script src="{% static 'object-detect/objectdetect.js'%}"></script>
@@ -116,7 +118,7 @@
 
 
 </script>
-
+{%  endcompress  %}
 
 
 

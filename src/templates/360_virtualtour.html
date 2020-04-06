@@ -1,0 +1,887 @@
+
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block title %}{{ block.super }}Virtual Reality{% endblock %}
+
+
+{% block navbar-left %}
+    <li>
+        <div class="select text-right">
+            <label for="videoSource">Cámara: </label>
+            <select id="videoSource"></select>
+        </div>
+    </li>
+
+{% endblock %}
+
+
+
+
+
+{% block scripts%}
+
+
+
+<script src="{% static 'threex/build/three.js' %}"></script>
+<script src="{% static 'threex/build/stats.min.js' %}"></script>
+<script src="{% static 'threex/build/FirstPersonControls.js' %}"></script>
+<script src="{% static 'threex/build/OrbitControls.js' %}"></script>
+<script src="{% static 'threex/build/BabylonLoader.js' %}"></script>
+<script src="{% static 'threex/build/RectAreaLightUniformsLib.js' %}"></script>
+<script src="{% static 'threex/build/tween.min.js' %}"></script>
+<script src="{% static 'threex/build/TouchControls.js' %}"></script>
+<script>src= "https://code.jquery.com/jquery-2.x-git.min.js"</script>
+<script src="{% static 'threex/dat.gui.min.js' %}"></script>
+
+
+<script>
+
+var  stats;
+var container = $("#container")
+
+var camera, controls, scene, renderer;
+
+var mesh;
+
+var clock = new THREE.Clock();
+
+;(function(){
+		// TODO backport those 2 in Detector.js
+		var hasGetUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia) ? true : false
+		var hasMediaStreamTrackSources = navigator.mediaDevices.enumerateDevices() ? true : false
+		var hasWebGL = ( function () { try { var canvas = document.createElement( 'canvas' ); return !! ( window.WebGLRenderingContext && ( canvas.getContext( 'webgl' ) || canvas.getContext( 'experimental-webgl' ) ) ); } catch ( e ) { return false; } } )()
+
+		if( hasWebGL === false ){
+			alert('your browser doesn\'t support navigator.getUserMedia()')
+		}
+		if( hasMediaStreamTrackSources === false ){
+			alert('your browser doesn\'t support MediaStreamTrack.getSources()')
+		}
+		if( hasGetUserMedia === false ){
+			alert('your browser doesn\'t support navigator.getUserMedia()')
+		}
+
+
+})()
+
+
+        	init(container);
+        	animate();
+
+
+
+			function init(container) {
+
+				container = document.getElementById( 'container' );
+
+				// camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 20000 );
+			 //   camera.position.y = 15;
+				// controls = new THREE.FirstPersonControls( camera );
+				// controls.movementSpeed = 20;
+				// controls.lookSpeed = 0.125;
+				// controls.lookVertical = true;
+
+				scene = new THREE.Scene();
+				// scene.background = new THREE.Color( 0xECD6B6 );
+
+
+			    camera	= new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+	            camera.position.z = 50;  //supports more realistic vision (750 for bracelets)
+
+
+                // function addControls() {
+                //     		// Camera
+                //     		camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 20000);
+                //     		// Controls
+                //     		var options = {
+                //     			speedFactor: 0.5,
+                //     			delta: 1,
+                //     			rotationFactor: 0.002,
+                //     			maxPitch: 55,
+                //     			hitTest: true,
+                //     			hitTestDistance: 40
+                //     		};
+                //     		controls = new TouchControls(container.parent(), camera, options);
+                //     		controls.setPosition(0, 35, 400);
+                //     		controls.addToScene(scene);
+
+                // }
+
+
+
+
+
+//         ;(function(){
+//             var path="{% static 'site/img/taxco' %}";
+//             var extension='.jpg';
+//             var urls=[
+//                 path + 'posx' + extension, path + 'negx' + extension,
+//                 path + 'posy' + extension, path + 'negy' + extension,
+//                 path + 'posz' + extension, path + 'negz' + extension,
+//                 ];
+
+//             var textureCube_to_Reflect = THREE.ImageUtils.loadTextureCube (urls);
+
+//             var loader_texture = new THREE.TextureLoader();
+//             var texture =  loader_texture.load("{% static 'site/json/anchor_bracelet/TextureAtlas_anchor_beadings.png' %}");
+
+
+//         //     // Cube texture environment
+
+//         //     var skyGeometry = new THREE.CubeGeometry( 500, 500, 500 );
+//         //     var cubeMaterials =[
+//         //         new THREE.MeshBasicMaterial({map: loader_texture.load("{% static 'site/img/taxcoposx.jpg' %}"),side:THREE.DoubleSide}),
+//         //         new THREE.MeshBasicMaterial({map: loader_texture.load("{% static 'site/img/taxcoposy.jpg' %}"),side:THREE.DoubleSide}),
+//         //         new THREE.MeshBasicMaterial({map: loader_texture.load("{% static 'site/img/taxcoposz.jpg' %}"),side:THREE.DoubleSide}),
+//         //         new THREE.MeshBasicMaterial({map: loader_texture.load("{% static 'site/img/taxconegx.jpg' %}"),side:THREE.DoubleSide}),
+//         //         new THREE.MeshBasicMaterial({map: loader_texture.load("{% static 'site/img/taxconegy.jpg' %}"),side:THREE.DoubleSide}),
+//         //         new THREE.MeshBasicMaterial({map: loader_texture.load("{% static 'site/img/taxconegz.jpg' %}"),side:THREE.DoubleSide})
+//         //     ];
+//         //     var skyMaterial = new THREE.MultiMaterial(cubeMaterials);
+//         // 	var skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
+//         // 	scene.add( skyBox );
+
+
+//             //
+
+//             var geometry = new THREE.SphereBufferGeometry( 100, 60, 40 );
+// 			// invert the geometry on the x-axis so that all of the faces point inward
+// 			geometry.scale( - 1, 1, 1 );
+
+// 			var material = new THREE.MeshBasicMaterial( {
+// 				map: new THREE.TextureLoader().load( "{% static 'site/img/jewelry_store_360.jpg' %}" )
+// 			} );
+
+// 			sphere = new THREE.Mesh( geometry, material );
+//             scene.add(sphere);
+
+
+
+
+
+
+//             // //  default array values for  gui element
+
+//             var parameters = {
+//                             color : 0xd3d3d3,       //set default value
+//                     		opacity: 0.25,          // ok
+//                     		emissive : 0X353535,     //
+//                     		emissiveIntensity : 0.08,  //ok
+//                     		envMap : true,           //
+//                     		roughness : 0.25,         //
+//                     		metalness : 0.8  ,           //
+//                     		smooth : true,
+//                     	}
+
+//       // load a resource ;/json/anchor_bracelet/anchor_bracelet_beadings.json
+//       var loader = new THREE.ObjectLoader();
+//         loader.load("{% static 'site/json/anchor_bracelet/anchor_bracelet_beadings.json' %}",function ( object,materials ) {
+//                     var  materials= new THREE.MeshStandardMaterial( {
+//                                         color : parameters.color,                           //as a defalult value
+//                                         emissive   : parameters.emissive,
+//                                         emissiveIntensity : parameters.emissiveIntensity,
+//                                         roughness : parameters.roughness,
+//                                         metalness: parameters.metalness,
+//                                         envMap     : textureCube_to_Reflect,
+//                                         shading : THREE.SmoothShading,
+//                                         side : THREE.DoubleSide,
+//                                         map : texture,
+//                                         // combine    : THREE.MixOperation                  //not supported in standard material
+//                                     } );
+
+//                     var bracelet1 = object.getObjectByName("beading_right");
+//                     var bracelet2 = object.getObjectByName("beading_central");
+//                     var bracelet3 = object.getObjectByName("beading_left");
+//                     var beadings = object.getObjectByName("beading_lanchor");
+//                     var anchor = object.getObjectByName("anchor");
+
+
+//                       bracelet1.traverse(function (child) {
+//                         if (child instanceof THREE.Mesh) {
+//                             child.material = materials;
+//                         }
+//                     });
+//                      bracelet2.traverse(function (child) {
+//                         if (child instanceof THREE.Mesh) {
+//                             child.material = materials;
+//                         }
+//                     });
+//                      bracelet3.traverse(function (child) {
+//                         if (child instanceof THREE.Mesh) {
+//                             child.material = materials;
+//                         }
+//                     });
+//                      beadings.traverse(function (child) {
+//                         if (child instanceof THREE.Mesh) {
+//                             child.material = materials;
+//                         }
+//                     });
+//                      anchor.traverse(function (child) {
+//                         if (child instanceof THREE.Mesh) {
+//                             child.material = materials;
+//                         }
+//                     });
+
+//              		scene.add( bracelet1 );
+//              			scene.add( bracelet2 );
+//              				scene.add( bracelet3 );
+//              					scene.add( beadings );
+//              						scene.add( anchor );
+//                     console.log(object);
+//             		scene.add( object );
+
+//          	var gui = new dat.GUI({
+//          	    autoPlace: false,
+//                 width: 300
+//          	});
+
+//             var customContainer = $('.moveGUI').append($(gui.domElement));
+//         	gui.addFolder("material");
+//         		  gui.addColor(parameters, 'color').onChange(function(e) {
+//                     materials.color = new THREE.Color(e);       // dinamic value
+//                 });
+//                 	gui.addColor(parameters, 'emissive').onChange(function(e){
+//         			materials.emissive = new THREE.Color(e);
+//         		})
+//         			gui.add(parameters,'opacity',0, 1).onChange(function(){
+//         		    materials.opacity =  parameters.opacity;
+//         		})
+//         		gui.add(parameters, 'emissiveIntensity',0,1).onChange(function(){
+//         			materials.emissiveIntensity = parameters.emissiveIntensity;
+//         		})
+//         		gui.add(parameters,'roughness',0,1).onChange(function(){
+//         			materials.roughness = parameters.roughness;
+//         		})
+//         		gui.add(parameters,'metalness',0,1).onChange(function(){
+//         			materials.metalness = parameters.metalness;
+//         		})
+//         		gui.add(parameters,'envMap',0,1).onChange(function(envmap){
+//         			if(this.checked ) {
+//             			materials.envMap = parameters.envMap;
+//             		}
+//             		else {
+//             			materials.envMap = null;
+//             		}
+//         		})
+//         	gui.open();
+
+//         	    }
+//         );
+
+//         })()
+
+
+// ************************************************************************************************
+//                                  anchor_gold_bracelet_beadings
+// ************************************************************************************************
+//                 ;(function(){
+//             var path="{% static 'site/img/taxco' %}";
+//             var extension='.jpg';
+//             var urls=[
+//                 path + 'posx' + extension, path + 'negx' + extension,
+//                 path + 'posy' + extension, path + 'negy' + extension,
+//                 path + 'posz' + extension, path + 'negz' + extension,
+//                 ];
+
+//             var textureCube_to_Reflect = THREE.ImageUtils.loadTextureCube (urls);
+
+//             var loader_texture = new THREE.TextureLoader();
+//             var texture =  loader_texture.load("{% static 'site/json/anchor_bracelet/TextureAtlas_anchor_gold.png' %}");
+
+
+//             //Spherical Texture environment
+
+//             var geometry = new THREE.SphereBufferGeometry( 100, 60, 40 );
+// 			// invert the geometry on the x-axis so that all of the faces point inward
+// 			geometry.scale( - 1, 1, 1 );
+
+// 			var material = new THREE.MeshBasicMaterial( {
+// 				map: new THREE.TextureLoader().load( "{% static 'site/img/jewelry_store_360.jpg' %}" )
+// 			} );
+
+// 			sphere = new THREE.Mesh( geometry, material );
+//             scene.add(sphere);
+
+
+
+//             var  onix_materials= new THREE.MeshStandardMaterial( {
+//                                       color :0xd6ad90,
+//                                         emissive   : 0X443131,
+//                                         emissiveIntensity : 0.09,
+//                                         roughness : 0.21,
+//                                         metalness: 0.91,
+//                                         envMap     : textureCube_to_Reflect,
+//                                         shading : THREE.SmoothShading,
+//                                         side : THREE.DoubleSide,
+//                                         map : texture,
+//                                     } );
+
+
+//             var  volcanic_materials= new THREE.MeshStandardMaterial( {
+//                                         color :0x707070,
+//                                         emissive   : 0X353535,
+//                                         emissiveIntensity : 0.004,
+//                                         roughness : 0.67,
+//                                         metalness: 0.44,
+//                                         envMap     : null,
+//                                         shading : THREE.SmoothShading,
+//                                         side : THREE.DoubleSide,
+//                                         map : texture,
+//                                     } );
+
+
+//             var  acerina_materials= new THREE.MeshStandardMaterial( {
+//                                         color :0x878787,
+//                                         emissive   : 0X353535,
+//                                         emissiveIntensity : 0.004,
+//                                         roughness : 0.45,
+//                                         metalness: 0.87,
+//                                         envMap     : textureCube_to_Reflect,
+//                                         shading : THREE.SmoothShading,
+//                                         side : THREE.DoubleSide,
+//                                         map : texture,
+//                                     } );
+//              var  gold_materials= new THREE.MeshStandardMaterial( {
+//                                         color :0xd6ad90,
+//                                         emissive   : 0X353535,
+//                                         emissiveIntensity : 0.004,
+//                                         roughness : 0.31,
+//                                         metalness: 0.72,
+//                                         envMap     : textureCube_to_Reflect,
+//                                         shading : THREE.SmoothShading,
+//                                         side : THREE.DoubleSide,
+//                                         map : texture,
+//                                     } );
+
+
+//       // load a resource Scene
+//       var loader = new THREE.ObjectLoader();
+//         loader.load("{% static 'site/json/anchor_bracelet/anchor_gold_bracelet_beadings.json' %}",function ( object ) {
+//                 console.log(object);
+
+//                     var bracelet1 = object.getObjectByName("beading_right");
+//                     var bracelet2 = object.getObjectByName("beading_central");
+//                     var bracelet3 = object.getObjectByName("beading_left");
+//                     var anchor = object.getObjectByName("anchor");
+
+//                       bracelet1.traverse(function (child) {
+//                         if (child instanceof THREE.Mesh) {
+//                             child.material = acerina_materials;
+//                         }
+//                     });
+//                     bracelet2.traverse(function (child) {
+//                         if (child instanceof THREE.Mesh) {
+//                             child.material = volcanic_materials;
+//                         }
+//                     });
+//                      bracelet3.traverse(function (child) {
+//                         if (child instanceof THREE.Mesh) {
+//                             child.material = onix_materials;
+//                         }
+//                     });
+//                      anchor.traverse(function (child) {
+//                         if (child instanceof THREE.Mesh) {
+//                             child.material = gold_materials;
+//                         }
+//                     });
+
+//              		scene.add( bracelet1 );
+//              			 scene.add( bracelet2 );
+//              				scene.add( bracelet3 );
+//              						scene.add( anchor );
+
+
+//         	    }
+//         );
+
+//         })()
+
+
+
+// // ************************************************************************************************
+// //                                  anchor_gold_bracelet_beadings
+// // ************************************************************************************************
+//                 ;(function(){
+//             var path="{% static 'site/img/taxco' %}";
+//             var extension='.jpg';
+//             var urls=[
+//                 path + 'posx' + extension, path + 'negx' + extension,
+//                 path + 'posy' + extension, path + 'negy' + extension,
+//                 path + 'posz' + extension, path + 'negz' + extension,
+//                 ];
+
+//             var textureCube_to_Reflect = THREE.ImageUtils.loadTextureCube (urls);
+
+//             var loader_texture = new THREE.TextureLoader();
+//             var texture =  loader_texture.load("{% static 'site/json/TextureAtlas_lion.png' %}");
+
+
+//             //Spherical Texture environment
+
+//             var geometry = new THREE.SphereBufferGeometry( 100, 60, 40 );
+// 			// invert the geometry on the x-axis so that all of the faces point inward
+// 			geometry.scale( - 1, 1, 1 );
+
+// 			var material = new THREE.MeshBasicMaterial( {
+// 				map: new THREE.TextureLoader().load( "{% static 'site/img/jewelry_store_360.jpg' %}" )
+// 			} );
+
+// 			sphere = new THREE.Mesh( geometry, material );
+//             scene.add(sphere);
+
+
+
+//             var  onix_materials = new THREE.MeshStandardMaterial( {
+//                                       color :0xd6ad90,
+//                                         emissive   : 0X443131,
+//                                         emissiveIntensity : 0.09,
+//                                         roughness : 0.21,
+//                                         metalness: 0.91,
+//                                         envMap     : textureCube_to_Reflect,
+//                                         shading : THREE.SmoothShading,
+//                                         side : THREE.DoubleSide,
+//                                         map : texture,
+//                                     } );
+
+
+//             var  volcanic_materials = new THREE.MeshStandardMaterial( {
+//                                         color :0x707070,
+//                                         emissive   : 0X353535,
+//                                         emissiveIntensity : 0.004,
+//                                         roughness : 0.67,
+//                                         metalness: 0.44,
+//                                         envMap     : null,
+//                                         shading : THREE.SmoothShading,
+//                                         side : THREE.DoubleSide,
+//                                         map : texture,
+//                                     } );
+
+
+//             var  acerina_materials = new THREE.MeshStandardMaterial( {
+//                                         color :0x878787,
+//                                         emissive   : 0X353535,
+//                                         emissiveIntensity : 0.004,
+//                                         roughness : 0.45,
+//                                         metalness: 0.87,
+//                                         envMap     : textureCube_to_Reflect,
+//                                         shading : THREE.SmoothShading,
+//                                         side : THREE.DoubleSide,
+//                                         map : texture,
+//                                     } );
+
+//             var parameters = {
+//                 color : 0xf4f4f4,       //set default value
+//         		opacity: 0.25,          // ok
+//         		emissive : 0X353535,     //
+//         		emissiveIntensity : 0.08,  //ok
+//         		envMap : true,           //
+//         		roughness : 0.47,         //
+//         		metalness : 0.8  ,           //
+//         		smooth : true,
+//         	}
+
+
+//       // load a resource Scene
+//       var loader = new THREE.ObjectLoader();
+//         loader.load("{% static 'site/json/bracelet_lion_beadings.json' %}",function ( object, materials ) {
+//                     console.log(object);
+//                      var  materials= new THREE.MeshStandardMaterial( {
+//                             color : parameters.color,                           //as a defalult value
+//                             emissive   : parameters.emissive,
+//                             emissiveIntensity : parameters.emissiveIntensity,
+//                             roughness : parameters.roughness,
+//                             metalness: parameters.metalness,
+//                             envMap     : textureCube_to_Reflect,
+//                             shading : THREE.SmoothShading,
+//                             side : THREE.DoubleSide,
+//                             map : texture,
+//                             // combine    : THREE.MixOperation                  //not supported in standard material
+//                         } );
+
+//                     var bracelet1 = object.getObjectByName("beading_right");
+//                     var bracelet2 = object.getObjectByName("beading_central");
+//                     var bracelet3 = object.getObjectByName("beading_left");
+//                     var lion = object.getObjectByName("beading_lion");
+
+//                     bracelet1.traverse(function (child) {
+//                         if (child instanceof THREE.Mesh) {
+//                             child.material = acerina_materials;
+//                         }
+//                     });
+//                     bracelet2.traverse(function (child) {
+//                         if (child instanceof THREE.Mesh) {
+//                             child.material = volcanic_materials;
+//                         }
+//                     });
+//                      bracelet3.traverse(function (child) {
+//                         if (child instanceof THREE.Mesh) {
+//                             child.material = onix_materials;
+//                         }
+//                     });
+//                     lion.traverse(function (child) {
+//                         if (child instanceof THREE.Mesh) {
+//                             child.material = materials;
+//                         }
+//                     });
+
+//              		scene.add( bracelet1 );
+//              			 scene.add( bracelet2 );
+//              				scene.add( bracelet3 );
+//              						scene.add( lion );
+
+
+//  	var gui = new dat.GUI({
+//      autoPlace: false,
+//     width: 300
+//  	});
+
+//     var customContainer = $('.moveGUI').append($(gui.domElement));
+// 	gui.addFolder("material");
+// 		  gui.addColor(parameters, 'color').onChange(function(e) {
+//             materials.color = new THREE.Color(e);       // dinamic value
+//         });
+//         	gui.addColor(parameters, 'emissive').onChange(function(e){
+// 			materials.emissive = new THREE.Color(e);
+// 		})
+// 			gui.add(parameters,'opacity',0, 1).onChange(function(){
+// 		    materials.opacity =  parameters.opacity;
+// 		})
+// 		gui.add(parameters, 'emissiveIntensity',0,1).onChange(function(){
+// 			materials.emissiveIntensity = parameters;
+// 		})
+// 		gui.add(parameters,'roughness',0,1).onChange(function(){
+// 			materials.roughness = parameters.roughness;
+// 		})
+// 		gui.add(parameters,'metalness',0,1).onChange(function(){
+// 			materials.metalness = parameters.metalness;
+// 		})
+// 		gui.add(parameters,'envMap',0,1).onChange(function(envmap){
+// 			if(this.checked ) {
+//     			materials.envMap = parameters.envMap;
+//     		}
+//     		else {
+//     			materials.envMap = null;
+//     		}
+// 		})
+// 	gui.open();
+
+
+//         	    }
+//         );
+
+//         })()
+
+
+
+// ************************************************************************************************
+//                                  jaguar_bracelet_beadings
+// ************************************************************************************************
+                ;(function(){
+            var path="{% static 'site/img/taxco' %}";
+            var extension='.jpg';
+            var urls=[
+                path + 'posx' + extension, path + 'negx' + extension,
+                path + 'posy' + extension, path + 'negy' + extension,
+                path + 'posz' + extension, path + 'negz' + extension,
+                ];
+
+            var textureCube_to_Reflect = THREE.ImageUtils.loadTextureCube (urls);
+
+            var loader_texture = new THREE.TextureLoader();
+            var texture =  loader_texture.load("{% static 'site/json/TextureAtlas_jaguar_beadings.png' %}");
+
+
+            //Spherical Texture environment
+
+            var geometry = new THREE.SphereBufferGeometry( 70, 60, 40 );
+			// invert the geometry on the x-axis so that all of the faces point inward
+			geometry.scale( - 1, 1, 1 );
+
+			var material = new THREE.MeshBasicMaterial( {
+				map: new THREE.TextureLoader().load( "{% static 'site/img/jewelry_store_360.jpg' %}" )
+			} );
+
+			sphere = new THREE.Mesh( geometry, material );
+            scene.add(sphere);
+
+
+            var  acerina_materials = new THREE.MeshStandardMaterial( {
+                                        color :0x878787,
+                                        emissive   : 0X353535,
+                                        emissiveIntensity : 0.004,
+                                        roughness : 0.45,
+                                        metalness: 0.87,
+                                        envMap     : textureCube_to_Reflect,
+                                        shading : THREE.SmoothShading,
+                                        side : THREE.DoubleSide,
+                                        map : texture,
+                                    } );
+            var  silver_materials = new THREE.MeshStandardMaterial( {
+                                        color : 0xd9d9d9,       //set default value
+                                    	opacity: 0.25,          // ok
+                                    	emissive : 0X353535,     //
+                                    	emissiveIntensity : 0.08,  //ok
+                                    	roughness : 0.32,         //
+                                    	metalness : 0.76  ,           //
+                                    	smooth : true,
+                                    	envMap     : textureCube_to_Reflect,
+                                        shading : THREE.SmoothShading,
+                                        side : THREE.DoubleSide,
+                                        map : texture,
+                                    } );
+             var  tiger_eye_materials = new THREE.MeshStandardMaterial( {
+                                        color : 0x422d20,       //set default value
+                                		opacity: 0.25,          // ok
+                                		emissive : 0X3a1d1d,     //
+                                		emissiveIntensity : 0.08,  //ok
+                                		envMap : true,           //
+                                		roughness : 0.11,         //
+                                		metalness : 0.27  ,           //
+                                		smooth : true,
+                                    	envMap     : textureCube_to_Reflect,
+                                        shading : THREE.SmoothShading,
+                                        side : THREE.DoubleSide,
+                                        map : texture,
+                                    } );
+
+            var parameters = {
+                color : 0x828282,       //set default value
+        		opacity: 0.25,          // ok
+        		emissive : 0X3a1d1d,     //
+        		emissiveIntensity : 0.08,  //ok
+        		envMap : true,           //
+        		roughness : 0.11,         //
+        		metalness : 0.09  ,           //
+        		smooth : true,
+        	}
+
+
+      // load a resource Scene
+      var loader = new THREE.ObjectLoader();
+        loader.load("{% static 'site/json/bracelet_jaguar_beadings.json' %}",function ( object, materials ) {
+                    console.log(object);
+                     var  materials= new THREE.MeshStandardMaterial( {
+                            color : parameters.color,
+                            opacity : parameters.opacity, //as a defalult value
+                            emissive   : parameters.emissive,
+                            emissiveIntensity : parameters.emissiveIntensity,
+                            roughness : parameters.roughness,
+                            metalness: parameters.metalness,
+                            envMap     : textureCube_to_Reflect,
+                            shading : THREE.SmoothShading,
+                            side : THREE.DoubleSide,
+                            map : texture,
+                            // combine    : THREE.MixOperation                  //not supported in standard material
+                        } );
+
+                    var bracelet = object.getObjectByName("eye_tiger_beadings");
+                    var ornaments = object.getObjectByName("hematite_beadings");
+                    var jaguar = object.getObjectByName("jaguar_bead");
+
+                    ornaments.traverse(function (child) {
+                        if (child instanceof THREE.Mesh) {
+                            child.material = acerina_materials;
+                        }
+                    });
+                    bracelet.traverse(function (child) {
+                        if (child instanceof THREE.Mesh) {
+                            child.material = tiger_eye_materials;
+                        }
+                    });
+                    jaguar.traverse(function (child) {
+                        if (child instanceof THREE.Mesh) {
+                            child.material = silver_materials;
+                        }
+                    });
+
+             		scene.add( bracelet );
+             			 scene.add( ornaments );
+             						scene.add( jaguar );
+
+
+ 	var gui = new dat.GUI({
+     autoPlace: false,
+    width: 300
+ 	});
+
+    var customContainer = $('.moveGUI').append($(gui.domElement));
+	gui.addFolder("material");
+		  gui.addColor(parameters, 'color').onChange(function(e) {
+            materials.color = new THREE.Color(e);       // dinamic value
+        });
+        	gui.addColor(parameters, 'emissive').onChange(function(e){
+			materials.emissive = new THREE.Color(e);
+		})
+			gui.add(parameters,'opacity',0, 1).onChange(function(){
+		    materials.opacity =  parameters.opacity;
+		})
+		gui.add(parameters, 'emissiveIntensity',0,1).onChange(function(){
+			materials.emissiveIntensity = parameters.emissiveIntensity;
+		})
+		gui.add(parameters,'roughness',0,1).onChange(function(){
+			materials.roughness = parameters.roughness;
+		})
+		gui.add(parameters,'metalness',0,1).onChange(function(){
+			materials.metalness = parameters.metalness;
+		})
+		gui.add(parameters,'envMap',0,1).onChange(function(envmap){
+			if(this.checked ) {
+    			materials.envMap = parameters.envMap;
+    		}
+    		else {
+    			materials.envMap = null;
+    		}
+		})
+	gui.open();
+
+
+        	    }
+        );
+
+        })()
+
+                //lights for tiger´s eye effect
+                var h_light = 2;
+                var w_light = 100;
+                var light_color = 0xf5b700;
+                var rectLight = new THREE.RectAreaLight( light_color, undefined, h_light, w_light );
+                rectLight.intensity = 600;
+				rectLight.position.set( 10, -10, -15 );
+                scene.add( rectLight );
+
+                 var rectLight2 = new THREE.RectAreaLight( light_color, undefined, h_light, w_light );
+                rectLight2.intensity = 300;
+				rectLight2.position.set( -5, 0, -25 );
+                scene.add( rectLight2 );
+
+
+
+
+// ************************************************************************************************
+//                                  BabylonLoader from blender
+// ************************************************************************************************
+//                 ;(function(){
+//             var path="{% static 'site/img/taxco' %}";
+//             var extension='.jpg';
+//             var urls=[
+//                 path + 'posx' + extension, path + 'negx' + extension,
+//                 path + 'posy' + extension, path + 'negy' + extension,
+//                 path + 'posz' + extension, path + 'negz' + extension,
+//                 ];
+
+//             var textureCube_to_Reflect = THREE.ImageUtils.loadTextureCube (urls);
+
+//             var loader_texture = new THREE.TextureLoader();
+//             var texture =  loader_texture.load("{% static 'site/json/TextureAtlas_lion.png' %}");
+
+
+//             //Spherical Texture environment
+
+//             var geometry = new THREE.SphereBufferGeometry( 100, 60, 40 );
+// 			// invert the geometry on the x-axis so that all of the faces point inward
+// 			geometry.scale( - 1, 1, 1 );
+
+// 			var material = new THREE.MeshBasicMaterial( {
+// 				map: new THREE.TextureLoader().load( "{% static 'site/img/jewelry_store_360.jpg' %}" )
+// 			} );
+
+// 			sphere = new THREE.Mesh( geometry, material );
+//             scene.add(sphere);
+
+
+
+//             var parameters = {
+//                 color : 0xf4f4f4,       //set default value
+//         		opacity: 0.25,          // ok
+//         		emissive : 0X353535,     //
+//         		emissiveIntensity : 0.08,  //ok
+//         		envMap : true,           //
+//         		roughness : 0.47,         //
+//         		metalness : 0.8  ,           //
+//         		smooth : true,
+//         	}
+
+//             var loader = new THREE.BabylonLoader();
+//             loader.load("{% static 'site/img/Babylonjs/bracelet_skull/skull_bracelet.babylon' %}",function ( object ) {
+//                 object.position.set (0,0,0);
+//             		scene.add( object );
+//         	    }
+//         );
+
+//         })()
+
+
+
+// ************************************************************************************************
+//                                  Global-Scene complements
+// ************************************************************************************************
+				var ambientLight = new THREE.AmbientLight( 0xffffff, 0.3 );
+				scene.add( ambientLight );
+                var spotLight	= new THREE.SpotLight( 0xffffff );
+                spotLight.position.set( 20, 40, 60 );
+                console.log(spotLight);
+                scene.add( spotLight );
+
+				var directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
+				directionalLight.position.set( 10, 10, 3.5 ).normalize();
+				scene.add( directionalLight );
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.innerHTML = "";
+				container.appendChild( renderer.domElement );
+				window.addEventListener( 'resize', onWindowResize, false );
+
+                //controls
+				var controls = new THREE.OrbitControls( camera, renderer.domElement );
+                controls.enableRotate = true;
+                controls.enableZoom = true;
+                controls.update();
+				renderer.gammaFactor = 1.2;
+                renderer.gammaOutput = true;
+                renderer.gammaInput = true;
+			}
+
+			function onWindowResize() {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				// controls.handleResize();
+			}
+			function animate() {
+				requestAnimationFrame( animate );
+				// controls.update();
+				render();
+				// TWEEN.update()
+				// stats.update();
+    // 			var vector = new THREE.Vector3(controls.mouse.x, controls.mouse.y, 1);
+    // 	        vector.unproject(camera);
+			}
+			function render() {
+				// controls.update( clock.getDelta() );
+				// controls.update();
+				renderer.render( scene, camera );
+			}
+</script>
+<script>
+    $('.container').empty();            //Hidde footer container from base.html in order to resize correctly Screens
+</script>
+
+{% endblock scripts %}
+
+
+{% block container %}
+
+	<body>
+        <!--<div class="container-fluid">-->
+    		<div id="container"><br /><br /><br /><br /><br />Generating world...</div>
+    		<!--<div><br />(left click: forward, right click: backward)</div>-->
+
+    		<div  hidden class ='moveGUI' style='position: absolute; top: 80px; right: 2px'></div>
+        <!--</div>-->
+
+
+	</body>
+{% endblock container %}
+
