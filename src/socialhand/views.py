@@ -9,7 +9,7 @@ from django.core.mail import EmailMessage
 # from .forms import PostSearchForm
 from django.contrib import messages
 
-
+ 
 class HomePageView(generic.FormView):
     template_name = "home.html"
     form_class = ContactForm
