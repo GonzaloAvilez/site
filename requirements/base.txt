@@ -35,7 +35,7 @@ Pillow==3.4.2
 pyasn1==0.4.5
 pycparser==2.19
 PyJWT==1.7.1
-PyPDF2==1.26.0
+PyPDF2==1.27.9
 Pyphen==0.9.5
 python-http-client==3.1.0
 python-jose==3.0.1
