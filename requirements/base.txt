@@ -27,7 +27,7 @@ future==0.17.1
 html5lib==1.0.1
 idna==2.8
 kombu==3.0.37
-lxml==4.3.4
+lxml==4.9.1
 numpy==1.16.4
 oauthlib==3.0.1
 opencv-python==4.2.0.32
